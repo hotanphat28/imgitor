@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Tool - Web</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Image Processor 🚀</h1>
+        <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">
+            <div>
+                <label for="image">1. Upload Image:</label>
+                <input type="file" name="image" id="image" accept="image/*" required>
+            </div>
+            
+            <div>
+                <span class="label-header">2. Select Action:</span>
+                <div class="radio-group">
+                    <input type="radio" id="res" name="mode" value="resolution" checked onchange="toggleInputs()">
+                    <label for="res">By Resolution</label>
+                    
+                    <input type="radio" id="size" name="mode" value="filesize" onchange="toggleInputs()">
+                    <label for="size">By File Size</label>
+                    
+                    <input type="radio" id="bw" name="mode" value="bw_only" onchange="toggleInputs()">
+                    <label for="bw">Black & White</label>
+                </div>
+            </div>
+
+            <div id="inputs-frame">
+                <div id="resolution-inputs">
+                    <span class="label-header">3. Enter Dimensions (px):</span>
+                    <div class="input-row">
+                        <input type="number" name="width" placeholder="W" min="1">
+                        <span>x</span>
+                        <input type="number" name="height" placeholder="H" min="1">
+                    </div>
+                </div>
+                <div id="filesize-inputs" style="display:none;">
+                    <span class="label-header">3. Enter Target Size (KB):</span>
+                    <div class="input-row">
+                        <input type="number" name="size" placeholder="KB" min="1">
+                        <span>KB</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit">Process & Download</button>
+        </form>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
