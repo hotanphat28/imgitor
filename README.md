@@ -4,6 +4,7 @@ A browser-based image processing tool created with Flask. It allows you to:
 - Resize images by resolution (Height x Width).
 - Resize images by checking the target file size (KB).
 - Convert images to Black & White (Grayscale).
+- Remove background from images.
 
 ## 🌟 Features
 
@@ -13,13 +14,16 @@ A browser-based image processing tool created with Flask. It allows you to:
     1. **By Resolution**: Resize using Lanczos resampling.
     2. **By File Size**: Compress JPEG images to meet a target size in KB.
     3. **Black & White**: Convert images to grayscale.
+    4. **Remove Background**: AI-powered background removal.
 - **Modular Design**: Refactored into a scalable Flask application structure.
 
 ## 🛠️ Prerequisites
 
-- **Python 3.x**
+- **Python 3.12+** (Recommended due to dependency compatibility)
 - **Flask**
 - **Pillow** (PIL Fork)
+- **rembg**
+- **onnxruntime**
 
 ## 🚀 Installation
 
@@ -37,7 +41,7 @@ A browser-based image processing tool created with Flask. It allows you to:
 
 3. Install dependencies:
    ```bash
-   pip install Flask Pillow
+   pip install -r requirements.txt
    ```
 
 ## ▶️ Usage

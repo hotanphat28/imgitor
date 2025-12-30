@@ -1,5 +1,6 @@
 from PIL import Image
 import io
+from rembg import remove
 
 def resize_by_resolution(img, width, height):
     """Resizes the image to specific pixel dimensions."""
@@ -37,3 +38,7 @@ def resize_by_filesize(img, target_kb):
 def convert_to_bw(img):
     """Converts the image to grayscale (Black & White)."""
     return img.convert("L")
+
+def remove_background(img):
+    """Removes the background from the image."""
+    return remove(img)

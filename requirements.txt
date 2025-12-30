@@ -1,0 +1,4 @@
+flask
+pillow
+rembg
+onnxruntime

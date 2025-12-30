@@ -1,6 +1,6 @@
 from flask import request, render_template, send_file
 from app import app
-from app.utils import resize_by_resolution, resize_by_filesize, convert_to_bw
+from app.utils import resize_by_resolution, resize_by_filesize, convert_to_bw, remove_background
 from PIL import Image
 import io
 import os
@@ -49,6 +49,11 @@ def upload_file():
             processed_img = convert_to_bw(img)
             suffix = "_bw"
             save_format = "PNG" if img.mode == 'RGBA' else "JPEG"
+        
+        elif mode == 'remove_bg':
+            processed_img = remove_background(img)
+            suffix = "_nobg"
+            save_format = "PNG"
 
         if not processed_img:
             return "Error: Invalid mode.", 400
