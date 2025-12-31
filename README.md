@@ -9,6 +9,8 @@ A browser-based image processing tool created with Flask. It allows you to:
 ## 🌟 Features
 
 - **Web Interface**: Simple and responsive UI using HTML5 & CSS (Space Grotesk & Space Mono fonts).
+- **Interactive Workflow**: Step-by-step process (Upload -> Edit -> Preview -> Save).
+- **Live Preview**: See "Before" and "After" comparisons before saving.
 - **Image Upload**: Supports common formats (JPG, PNG, WebP, etc.).
 - **Processing Modes**:
     1. **By Resolution**: Resize using Lanczos resampling.
@@ -51,7 +53,10 @@ A browser-based image processing tool created with Flask. It allows you to:
    python run.py
    ```
 2. Open your browser and go to `http://127.0.0.1:5000`.
-3. Upload an image, select a mode, enter required parameters, and click **Process & Download**.
+3. **Step 1**: Upload an image.
+4. **Step 2**: Select a mode and adjust settings.
+5. Click **Preview Changes** to see the result.
+6. Click **Save Image** to download.
 
 ## 📂 Project Structure
 

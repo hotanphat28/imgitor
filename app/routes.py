@@ -63,9 +63,23 @@ def upload_file():
         if save_format == 'JPEG' and processed_img.mode in ('RGBA', 'LA', 'P'):
             processed_img = processed_img.convert('RGB')
         
+
+        
         processed_img.save(buffer, format=save_format)
         buffer.seek(0)
         
+        # Check if this is a preview request
+        is_preview = request.form.get('preview') == 'true'
+        
+        if is_preview:
+            import base64
+            img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            return {
+                "success": True,
+                "image": f"data:image/{save_format.lower()};base64,{img_str}",
+                "filename": f"{filename}{suffix}.{save_format.lower()}"
+            }
+
         return send_file(buffer, mimetype=f"image/{save_format.lower()}", as_attachment=True, download_name=f"{filename}{suffix}.{save_format.lower()}")
 
     except ValueError:
