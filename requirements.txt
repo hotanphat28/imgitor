@@ -1,4 +1,4 @@
 flask
 pillow
-rembg
 onnxruntime
+rembg

@@ -10,6 +10,7 @@ function handleFileUpload(input) {
 		const reader = new FileReader();
 		reader.onload = function (e) {
 			document.getElementById('preview-before').src = e.target.result;
+			document.getElementById('preview-after').src = e.target.result;
 			// Switch steps
 			document.getElementById('step-1-upload').style.display = 'none';
 			document.getElementById('step-2-edit').style.display = 'block';
