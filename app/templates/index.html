@@ -5,7 +5,9 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Image Tool - Web</title>
-        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+        <link
+            href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+            rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     </head>
 
@@ -38,13 +40,10 @@
                         <div class="radio-group">
                             <input type="radio" id="res" name="mode" value="resolution" checked
                                 onchange="toggleInputs()">
-                            <label for="res">By Resolution</label>
+                            <label for="res">Change Size (by resolution)</label>
 
-                            <input type="radio" id="size" name="mode" value="filesize" onchange="toggleInputs()">
-                            <label for="size">By File Size</label>
-
-                            <input type="radio" id="bw" name="mode" value="bw_only" onchange="toggleInputs()">
-                            <label for="bw">Black & White</label>
+                            <input type="radio" id="filter" name="mode" value="filter" onchange="toggleInputs()">
+                            <label for="filter">Apply Filter</label>
 
                             <input type="radio" id="rembg" name="mode" value="remove_bg" onchange="toggleInputs()">
                             <label for="rembg">Remove Background</label>
@@ -59,11 +58,15 @@
                                     <input type="number" name="height" placeholder="H" min="1">
                                 </div>
                             </div>
-                            <div id="filesize-inputs" style="display:none;">
-                                <span class="label-header">Enter Target Size (KB):</span>
+                            <div id="filter-inputs" style="display:none;">
+                                <span class="label-header">Select Filter:</span>
                                 <div class="input-row">
-                                    <input type="number" name="size" placeholder="KB" min="1">
-                                    <span>KB</span>
+                                    <select name="filter_type">
+                                        <option value="grayscale">Grayscale</option>
+                                        <option value="sepia">Sepia</option>
+                                        <option value="blue">Blue Tone</option>
+                                        <option value="warm">Warm Tone</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>

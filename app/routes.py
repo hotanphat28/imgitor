@@ -1,6 +1,6 @@
 from flask import request, render_template, send_file
 from app import app
-from app.utils import resize_by_resolution, resize_by_filesize, convert_to_bw, remove_background
+from app.utils import resize_by_resolution, apply_filter, remove_background
 from PIL import Image
 import io
 import os
@@ -29,25 +29,17 @@ def upload_file():
         save_format = "JPEG"
         suffix = "_processed"
 
-        # INVERSION OVER NESTING: Handle filesize first as it returns a unique buffer
-        if mode == 'filesize':
-            target_kb = int(request.form['size'])
-            buffer, mime = resize_by_filesize(img, target_kb)
-            if not buffer:
-                return "Error: Could not meet target size. Try a larger value.", 400
-            
-            return send_file(buffer, mimetype=mime, as_attachment=True, download_name=f"{filename}_scaled.jpg")
-
-        # Handle other modes
+        # Handle modes
         if mode == 'resolution':
             width, height = int(request.form['width']), int(request.form['height'])
             processed_img = resize_by_resolution(img, width, height)
             suffix = "_resized"
             save_format = "PNG" if img.mode == 'RGBA' else "JPEG"
         
-        elif mode == 'bw_only':
-            processed_img = convert_to_bw(img)
-            suffix = "_bw"
+        elif mode == 'filter':
+            filter_type = request.form.get('filter_type', 'grayscale')
+            processed_img = apply_filter(img, filter_type)
+            suffix = f"_{filter_type}"
             save_format = "PNG" if img.mode == 'RGBA' else "JPEG"
         
         elif mode == 'remove_bg':

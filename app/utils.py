@@ -6,38 +6,42 @@ def resize_by_resolution(img, width, height):
     """Resizes the image to specific pixel dimensions."""
     return img.resize((width, height), Image.Resampling.LANCZOS)
 
-def resize_by_filesize(img, target_kb):
-    """
-    Reduces file size by scaling down dimensions while keeping high JPEG quality.
-    Returns a BytesIO buffer and the corresponding mime type.
-    """
-    target_bytes = target_kb * 1024
-    quality = 90  # Maintain high visual quality
+def apply_filter(img, filter_type):
+    """Applies a specific color filter to the image."""
+    img = img.convert("RGB")
     
-    # Convert transparent images to RGB for JPEG compatibility
-    img_rgb = img.convert('RGB') if img.mode in ('RGBA', 'LA', 'P') else img
-
-    # Iteratively scale down until the file size target is met
-    for scale_percent in range(100, 10, -5):
-        width = int(img_rgb.width * scale_percent / 100)
-        height = int(img_rgb.height * scale_percent / 100)
-
-        if width < 1 or height < 1:
-            break
-
-        resized_img = img_rgb.resize((width, height), Image.Resampling.LANCZOS)
-        buffer = io.BytesIO()
-        resized_img.save(buffer, format="JPEG", quality=quality)
-        
-        if buffer.tell() <= target_bytes:
-            buffer.seek(0)
-            return buffer, "image/jpeg"
+    if filter_type == "grayscale":
+        return img.convert("L")
     
-    return None, None
+    # Get pixel data
+    pixels = img.load()
+    width, height = img.size
+    
+    for y in range(height):
+        for x in range(width):
+            r, g, b = pixels[x, y]
+            
+            if filter_type == "sepia":
+                tr = int(0.393 * r + 0.769 * g + 0.189 * b)
+                tg = int(0.349 * r + 0.686 * g + 0.168 * b)
+                tb = int(0.272 * r + 0.534 * g + 0.131 * b)
+            
+            elif filter_type == "blue":
+                tr = r
+                tg = g
+                tb = min(255, int(b * 1.5)) # Boost blue
+                
+            elif filter_type == "warm":
+                tr = min(255, int(r * 1.2)) # Boost red
+                tg = min(255, int(g * 1.1)) # Slightly boost green
+                tb = int(b * 0.9)           # Reduce blue
+            
+            else:
+                tr, tg, tb = r, g, b
 
-def convert_to_bw(img):
-    """Converts the image to grayscale (Black & White)."""
-    return img.convert("L")
+            pixels[x, y] = (min(tr, 255), min(tg, 255), min(tb, 255))
+            
+    return img
 
 def remove_background(img):
     """Removes the background from the image."""
