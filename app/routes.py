@@ -1,30 +1,43 @@
-from flask import request, render_template, send_file
-from app import app
+from flask import Blueprint, request, render_template, send_file, current_app
 from app.utils import resize_by_resolution, apply_filter, remove_background
 from PIL import Image
 import io
 import os
+from werkzeug.utils import secure_filename
 
-@app.route('/')
+main = Blueprint('main', __name__)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
+@main.route('/')
 def index():
     """Serves the main tool page."""
     return render_template('index.html')
 
-@app.route('/upload', methods=['POST'])
+@main.route('/upload', methods=['POST'])
 def upload_file():
     """Handles image uploads, processing, and delivery."""
     if 'image' not in request.files:
+        current_app.logger.warning('No file part in the request.')
         return "Error: No file uploaded.", 400
     
     file = request.files['image']
     if not file or file.filename == '':
+        current_app.logger.warning('Empty file uploaded.')
         return "Error: Empty file provided.", 400
+        
+    if not allowed_file(file.filename):
+        current_app.logger.warning(f'Invalid file extension uploaded: {file.filename}')
+        return "Error: Invalid file type.", 400
 
-    mode = request.form['mode']
+    filename = secure_filename(file.filename)
+    mode = request.form.get('mode', '')
     
     try:
         img = Image.open(file.stream)
-        filename, ext = os.path.splitext(file.filename)
+        base_filename, ext = os.path.splitext(filename)
         processed_img = None
         save_format = "JPEG"
         suffix = "_processed"
@@ -48,14 +61,13 @@ def upload_file():
             save_format = "PNG"
 
         if not processed_img:
+            current_app.logger.warning(f'Invalid mode requested: {mode}')
             return "Error: Invalid mode.", 400
 
         # Save processed image to buffer
         buffer = io.BytesIO()
         if save_format == 'JPEG' and processed_img.mode in ('RGBA', 'LA', 'P'):
             processed_img = processed_img.convert('RGB')
-        
-
         
         processed_img.save(buffer, format=save_format)
         buffer.seek(0)
@@ -69,12 +81,14 @@ def upload_file():
             return {
                 "success": True,
                 "image": f"data:image/{save_format.lower()};base64,{img_str}",
-                "filename": f"{filename}{suffix}.{save_format.lower()}"
+                "filename": f"{base_filename}{suffix}.{save_format.lower()}"
             }
 
-        return send_file(buffer, mimetype=f"image/{save_format.lower()}", as_attachment=True, download_name=f"{filename}{suffix}.{save_format.lower()}")
+        return send_file(buffer, mimetype=f"image/{save_format.lower()}", as_attachment=True, download_name=f"{base_filename}{suffix}.{save_format.lower()}")
 
-    except ValueError:
-        return "Error: Invalid input numbers.", 400
+    except ValueError as ve:
+        current_app.logger.error(f'ValueError during processing: {ve}')
+        return "Error: Invalid input parameters.", 400
     except Exception as e:
+        current_app.logger.error(f'Error processing image: {e}')
         return f"An error occurred: {e}", 500

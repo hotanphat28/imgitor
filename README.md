@@ -46,17 +46,47 @@ A browser-based image processing tool created with Flask. It allows you to:
    pip install -r requirements.txt
    ```
 
-## ▶️ Usage
+4. Set up environment variables:
+   Copy `.env.example` to `.env` and configure your settings.
+   
+   **On Linux/macOS:**
+   ```bash
+   cp .env.example .env
+   ```
+   **On Windows (Command Prompt):**
+   ```cmd
+   copy .env.example .env
+   ```
 
-1. Run the Flask application using the entry point:
+## ▶️ Usage (Development)
+
+1. Run the Flask application using the development server:
    ```bash
    python run.py
    ```
 2. Open your browser and go to `http://127.0.0.1:5000`.
-3. **Step 1**: Upload an image.
-4. **Step 2**: Select a mode and adjust settings.
-5. Click **Preview Changes** to see the result.
-6. Click **Save Image** to download.
+
+## 🚀 Production Deployment
+
+To run the application in a production environment, use the provided Waitress WSGI server:
+```bash
+python wsgi.py
+```
+
+### Docker
+
+You can also run the application using Docker:
+```bash
+docker build -t imgitor .
+docker run -p 5000:5000 imgitor
+```
+
+## 🧪 Testing
+
+To run the automated test suite, use pytest:
+```bash
+pytest tests/
+```
 
 ## 📂 Project Structure
 

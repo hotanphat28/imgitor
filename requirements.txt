@@ -2,3 +2,6 @@ flask
 pillow
 onnxruntime
 rembg
+waitress
+python-dotenv
+pytest
