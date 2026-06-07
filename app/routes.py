@@ -94,6 +94,60 @@ def upload_file():
             current_step += 1
         return get_preview_response(session_path, current_step, session_id, orig_name)
 
+    elif action == 'reset':
+        current_step = 0
+        for p in session_path.glob("*.png"):
+            if p.stem.isdigit() and int(p.stem) > 0:
+                p.unlink()
+        return get_preview_response(session_path, current_step, session_id, orig_name)
+
+    elif action == 'preview_only':
+        mode = request.form.get('mode', '')
+        try:
+            img_path = session_path / f"{current_step}.png"
+            if not img_path.exists():
+                return "Error: Current state not found.", 400
+                
+            img = Image.open(img_path)
+            
+            # FAST PREVIEW: Downscale image to max 800x800 to drastically speed up processing and network transfer
+            if mode in ['adjust', 'filter', 'watermark']:
+                if mode == 'watermark':
+                    # For watermark, coordinate math might get tricky if we downscale before processing.
+                    # We will downscale AFTER processing for watermark, but BEFORE for adjust/filter.
+                    pass
+                else:
+                    img.thumbnail((800, 800), Image.Resampling.NEAREST)
+            
+            wm_image_stream = None
+            if 'wm_image' in request.files and request.files['wm_image'].filename != '':
+                wm_image_stream = request.files['wm_image'].stream
+                
+            from app.utils import process_image_core
+            processed_img = process_image_core(img, mode, request.form, wm_image_stream)
+
+            if not processed_img:
+                processed_img = img
+                
+            # If watermark, we process at full resolution then downscale the result for fast network transfer
+            if mode == 'watermark':
+                processed_img.thumbnail((800, 800), Image.Resampling.NEAREST)
+
+            buffer = io.BytesIO()
+            processed_img.save(buffer, format='JPEG', quality=80) # Use JPEG for even faster network transfer during preview
+            img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            
+            return {
+                "success": True,
+                "image": f"data:image/jpeg;base64,{img_str}",
+                "session_id": session_id,
+                "current_step": current_step,
+                "filename": orig_name
+            }
+        except Exception as e:
+            current_app.logger.error(f'Error processing image preview: {e}')
+            return f"An error occurred: {e}", 500
+
     elif action == 'edit':
         mode = request.form.get('mode', '')
         try:

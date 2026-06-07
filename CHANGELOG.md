@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-06-07
+### Added
+- **Brutalist UI/UX**: Completely redesigned the interface using a strict Brutalist design system with high-contrast elements.
+- **Seamless Auto-Commit Workflow**: Removed "Commit Edit" buttons in favor of an intelligent auto-commit system that saves edits in the background when you finish interacting or switch tools.
+- **Dedicated Editor Mode**: The application now seamlessly locks into a distraction-free editor mode once an image is uploaded.
+- **Reset All Capability**: Instantly wipe out all stacked edits to return to the original image without restarting your session.
+- **Blazing-Fast Live Previews**: Rewrote the preview engine to downscale and JPEG-compress previews before processing, resulting in sub-50ms latency when dragging sliders.
+
 ## [1.3.0] - 2026-06-07
 ### Added
 - **Batch Processing**: Upload multiple images and apply operations to all of them in the background, downloading the result as a ZIP archive.

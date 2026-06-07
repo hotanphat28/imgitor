@@ -1,211 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Tool - Web</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="app-body">
+    <form action="{{ url_for('main.upload_file') }}" method="POST" enctype="multipart/form-data" id="main-form" class="app-layout">
+        <input type="hidden" name="session_id" id="session_id" value="">
+        <input type="hidden" name="current_step" id="current_step" value="0">
+        <input type="hidden" name="action" id="form_action" value="init">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Image Tool - Web</title>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
-            rel="stylesheet">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    </head>
+        <!-- Sidebar Left (Tools & Nav) -->
+        <aside class="sidebar sidebar-left">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-icon"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
+            </div>
+            
+            <div class="nav-links">
+                <a href="{{ url_for('main.index') }}" class="nav-btn active" title="Single Image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                </a>
+                <a href="{{ url_for('main.batch') }}" class="nav-btn" title="Batch Processing">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                </a>
+            </div>
 
-    <body>
-        <div class="theme-switch-wrapper">
-            <label class="theme-switch" for="theme-checkbox">
-                <input type="checkbox" id="theme-checkbox" onchange="toggleTheme(this.checked)" />
-                <span class="slider round"></span>
-            </label>
-            <span>Dark Mode</span>
-        </div>
+            <!-- Toolbar (only shown in edit mode) -->
+            <div id="toolbar-icons" class="toolbar-icons" style="display: none;">
+                <input type="radio" id="res" name="mode" value="resolution" checked onchange="toggleInputs()">
+                <label for="res" class="tool-btn" title="Resize">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
+                </label>
 
-        <nav class="top-nav">
-            <a href="{{ url_for('main.index') }}" class="nav-btn active">Single Image</a>
-            <a href="{{ url_for('main.batch') }}" class="nav-btn">Batch Processing</a>
-        </nav>
+                <input type="radio" id="crop" name="mode" value="crop" onchange="toggleInputs()">
+                <label for="crop" class="tool-btn" title="Crop">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"></path></svg>
+                </label>
 
-        <div class="container">
+                <input type="radio" id="rotate" name="mode" value="rotate" onchange="toggleInputs()">
+                <label for="rotate" class="tool-btn" title="Rotate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                </label>
+
+                <input type="radio" id="filter" name="mode" value="filter" onchange="toggleInputs()">
+                <label for="filter" class="tool-btn" title="Filters">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 3-6 3-3 6-3-6-6-3 6-3z"></path></svg>
+                </label>
+
+                <input type="radio" id="adjust" name="mode" value="adjust" onchange="toggleInputs()">
+                <label for="adjust" class="tool-btn" title="Adjustments">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </label>
+
+                <input type="radio" id="rembg" name="mode" value="remove_bg" onchange="toggleInputs()">
+                <label for="rembg" class="tool-btn" title="Remove BG">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                </label>
+
+                <input type="radio" id="watermark" name="mode" value="watermark" onchange="toggleInputs()">
+                <label for="watermark" class="tool-btn" title="Watermark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"></path><path d="M9 20h6"></path><path d="M12 4v16"></path></svg>
+                </label>
+            </div>
+
+            <div class="bottom-actions">
+                <label class="theme-switch" for="theme-checkbox" title="Toggle Dark Mode">
+                    <input type="checkbox" id="theme-checkbox" onchange="toggleTheme(this.checked)" />
+                    <span class="slider round">
+                        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </span>
+                </label>
+            </div>
+        </aside>
+
+        <!-- Main Canvas Area -->
+        <main class="canvas-wrapper">
             <div id="loader-overlay">
                 <div class="spinner"></div>
                 <p>Processing...</p>
             </div>
-            <h1>Image Processor 🚀</h1>
-            <form action="{{ url_for('main.upload_file') }}" method="POST" enctype="multipart/form-data" id="main-form">
-                <input type="hidden" name="session_id" id="session_id" value="">
-                <input type="hidden" name="current_step" id="current_step" value="0">
-                <input type="hidden" name="action" id="form_action" value="init">
 
-                <!-- STEP 1: UPLOAD -->
-                <div id="step-1-upload">
-                    <div class="upload-area">
-                        <label for="image" class="upload-label">
-                            <span class="icon">📁</span>
-                            <span>Click to Upload Image</span>
-                            <input type="file" name="image" id="image" accept="image/*" required
-                                onchange="handleFileUpload(this)">
-                        </label>
+            <div id="step-1-upload" class="upload-container">
+                <div class="upload-area">
+                    <label for="image" class="upload-label">
+                        <div class="icon-container">
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        </div>
+                        <span class="upload-text">Drag & Drop Image Here</span>
+                        <span class="upload-subtext">or click to browse from your computer</span>
+                        <input type="file" name="image" id="image" accept="image/*" required onchange="handleFileUpload(this)">
+                    </label>
+                </div>
+            </div>
+
+            <div id="step-2-edit" class="preview-container" style="display: none;">
+                <div class="canvas-header">
+                    <div class="history-controls">
+                        <button type="button" class="icon-btn" onclick="undoStep()" id="undo-btn" disabled title="Undo">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                        </button>
+                        <button type="button" class="icon-btn" onclick="redoStep()" id="redo-btn" disabled title="Redo">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                        </button>
+                        <button type="button" class="icon-btn danger" onclick="resetAll()" title="Reset All Edits" style="width: auto; padding: 0 1rem;">
+                            RESET
+                        </button>
+                        <button type="button" class="icon-btn danger" onclick="startOver()" title="Start Over (New Image)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="canvas-body">
+                    <img id="preview-live" src="" alt="Live Preview">
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar Right (Settings) -->
+        <aside class="sidebar sidebar-right" id="settings-sidebar" style="display: none;">
+            <div class="settings-header">
+                <h3>Settings</h3>
+            </div>
+            
+            <div class="settings-content">
+                <div id="inputs-frame">
+                    <!-- The inputs exactly as they were, but styled better -->
+                    <div id="resolution-inputs">
+                        <label class="setting-label">Dimensions</label>
+                        <div class="input-row">
+                            <input type="number" name="width" placeholder="Width" min="1" oninput="livePreview()" onchange="applyEdit()">
+                            <span class="x-divider">×</span>
+                            <input type="number" name="height" placeholder="Height" min="1" oninput="livePreview()" onchange="applyEdit()">
+                        </div>
+                    </div>
+
+                    <div id="crop-inputs" style="display:none;">
+                        <label class="setting-label">Aspect Ratio</label>
+                        <div class="input-row">
+                            <select id="crop_aspect_ratio" onchange="setCropAspectRatio(this.value)">
+                                <option value="NaN">Free Form</option>
+                                <option value="1">1:1 Square</option>
+                                <option value="1.77777777778">16:9 Widescreen</option>
+                                <option value="1.33333333333">4:3 Standard</option>
+                            </select>
+                        </div>
+                        <input type="hidden" name="crop_x" id="crop_x">
+                        <input type="hidden" name="crop_y" id="crop_y">
+                        <input type="hidden" name="crop_w" id="crop_w">
+                        <input type="hidden" name="crop_h" id="crop_h">
+                    </div>
+
+                    <div id="rotate-inputs" style="display:none;">
+                        <label class="setting-label">Rotation (Degrees)</label>
+                        <div class="input-row">
+                            <input type="number" name="rotate_deg" placeholder="e.g. 90" value="90" oninput="livePreview()" onchange="applyEdit()">
+                        </div>
+                    </div>
+
+                    <div id="filter-inputs" style="display:none;">
+                        <label class="setting-label">Filter Type</label>
+                        <div class="input-row">
+                            <select name="filter_type" onchange="applyEdit()">
+                                <option value="grayscale">Grayscale</option>
+                                <option value="sepia">Sepia</option>
+                                <option value="blue">Blue Tone</option>
+                                <option value="warm">Warm Tone</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="adjust-inputs" style="display:none;" class="slider-group">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <label>Brightness</label>
+                                <span id="val-bright" class="val-badge">1.0</span>
+                            </div>
+                            <input type="range" name="brightness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-bright').innerText=this.value; livePreview()" onchange="applyEdit()">
+                        </div>
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <label>Contrast</label>
+                                <span id="val-cont" class="val-badge">1.0</span>
+                            </div>
+                            <input type="range" name="contrast" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-cont').innerText=this.value; livePreview()" onchange="applyEdit()">
+                        </div>
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <label>Saturation</label>
+                                <span id="val-sat" class="val-badge">1.0</span>
+                            </div>
+                            <input type="range" name="saturation" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sat').innerText=this.value; livePreview()" onchange="applyEdit()">
+                        </div>
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <label>Sharpness</label>
+                                <span id="val-sharp" class="val-badge">1.0</span>
+                            </div>
+                            <input type="range" name="sharpness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sharp').innerText=this.value; livePreview()" onchange="applyEdit()">
+                        </div>
+                    </div>
+
+                    <div id="watermark-inputs" style="display:none;">
+                        <div class="wm-group">
+                            <label class="setting-label">Text Watermark</label>
+                            <input type="text" name="wm_text" placeholder="Enter text..." oninput="livePreview()" onchange="applyEdit()">
+                        </div>
+                        <div class="wm-row">
+                            <div class="wm-group">
+                                <label class="setting-label">Color</label>
+                                <div class="color-picker-wrapper">
+                                    <input type="color" name="wm_color" value="#ffffff" class="color-picker" oninput="livePreview()" onchange="applyEdit()">
+                                </div>
+                            </div>
+                            <div class="wm-group" style="flex:2;">
+                                <div class="slider-header">
+                                    <label>Opacity</label>
+                                    <span id="val-wm-opacity" class="val-badge">128</span>
+                                </div>
+                                <input type="range" name="wm_opacity" min="0" max="255" value="128" oninput="document.getElementById('val-wm-opacity').innerText=this.value; livePreview()" onchange="applyEdit()">
+                            </div>
+                        </div>
+                        <div class="wm-group">
+                            <label class="setting-label">Or Image Logo</label>
+                            <input type="file" name="wm_image" accept="image/*" class="file-input-small" onchange="applyEdit()">
+                        </div>
                     </div>
                 </div>
 
-                <!-- STEP 2: EDIT & PREVIEW -->
-                <div id="step-2-edit" style="display: none;">
-                    <div class="step-header">
-                        <span class="label-header">Edit Image Settings</span>
-                        <div>
-                            <button type="button" class="text-btn" onclick="undoStep()" id="undo-btn" disabled>↩ Undo</button>
-                            <button type="button" class="text-btn" onclick="redoStep()" id="redo-btn" disabled style="margin-left: 10px;">↪ Redo</button>
-                            <button type="button" class="text-btn" onclick="startOver()" style="margin-left: 15px;">↺ Start Over</button>
-                        </div>
-                    </div>
-
-                    <div class="controls-section">
-                        <span class="label-header">Select Action:</span>
-                        <div class="radio-group">
-                            <input type="radio" id="res" name="mode" value="resolution" checked
-                                onchange="toggleInputs()">
-                            <label for="res">Resize</label>
-
-                            <input type="radio" id="crop" name="mode" value="crop" onchange="toggleInputs()">
-                            <label for="crop">Crop</label>
-
-                            <input type="radio" id="rotate" name="mode" value="rotate" onchange="toggleInputs()">
-                            <label for="rotate">Rotate</label>
-
-                            <input type="radio" id="filter" name="mode" value="filter" onchange="toggleInputs()">
-                            <label for="filter">Filter</label>
-
-                            <input type="radio" id="adjust" name="mode" value="adjust" onchange="toggleInputs()">
-                            <label for="adjust">Adjust</label>
-
-                            <input type="radio" id="rembg" name="mode" value="remove_bg" onchange="toggleInputs()">
-                            <label for="rembg">Remove BG</label>
-
-                            <input type="radio" id="watermark" name="mode" value="watermark" onchange="toggleInputs()">
-                            <label for="watermark">Watermark</label>
-                        </div>
-
-                        <div id="inputs-frame">
-                            <div id="resolution-inputs">
-                                <span class="label-header">Enter Dimensions (px):</span>
-                                <div class="input-row">
-                                    <input type="number" name="width" placeholder="W" min="1">
-                                    <span>x</span>
-                                    <input type="number" name="height" placeholder="H" min="1">
-                                </div>
-                            </div>
-                            <div id="crop-inputs" style="display:none;">
-                                <span class="label-header">Crop Aspect Ratio:</span>
-                                <div class="input-row">
-                                    <select id="crop_aspect_ratio" onchange="setCropAspectRatio(this.value)">
-                                        <option value="NaN">Free Form</option>
-                                        <option value="1">1:1 Square</option>
-                                        <option value="1.77777777778">16:9 Widescreen</option>
-                                        <option value="1.33333333333">4:3 Standard</option>
-                                    </select>
-                                </div>
-                                <input type="hidden" name="crop_x" id="crop_x">
-                                <input type="hidden" name="crop_y" id="crop_y">
-                                <input type="hidden" name="crop_w" id="crop_w">
-                                <input type="hidden" name="crop_h" id="crop_h">
-                            </div>
-                            <div id="rotate-inputs" style="display:none;">
-                                <span class="label-header">Rotate Degrees:</span>
-                                <div class="input-row">
-                                    <input type="number" name="rotate_deg" placeholder="Degrees (e.g. 90, 180)" value="90">
-                                </div>
-                            </div>
-                            <div id="filter-inputs" style="display:none;">
-                                <span class="label-header">Select Filter:</span>
-                                <div class="input-row">
-                                    <select name="filter_type">
-                                        <option value="grayscale">Grayscale</option>
-                                        <option value="sepia">Sepia</option>
-                                        <option value="blue">Blue Tone</option>
-                                        <option value="warm">Warm Tone</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div id="adjust-inputs" style="display:none;">
-                                <span class="label-header">Image Adjustments:</span>
-                                <div class="input-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <label style="margin:0;">Brightness: <span id="val-bright">1.0</span></label>
-                                        <input type="range" name="brightness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-bright').innerText=this.value" style="width: 60%;">
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <label style="margin:0;">Contrast: <span id="val-cont">1.0</span></label>
-                                        <input type="range" name="contrast" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-cont').innerText=this.value" style="width: 60%;">
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <label style="margin:0;">Saturation: <span id="val-sat">1.0</span></label>
-                                        <input type="range" name="saturation" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sat').innerText=this.value" style="width: 60%;">
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <label style="margin:0;">Sharpness: <span id="val-sharp">1.0</span></label>
-                                        <input type="range" name="sharpness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sharp').innerText=this.value" style="width: 60%;">
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="watermark-inputs" style="display:none;">
-                                <span class="label-header">Watermark Settings:</span>
-                                <div class="input-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
-                                    <div>
-                                        <label>Text Watermark:</label>
-                                        <input type="text" name="wm_text" placeholder="Enter text..." style="width: 100%;">
-                                    </div>
-                                    <div style="display: flex; gap: 10px;">
-                                        <div style="flex: 1;">
-                                            <label>Text Color:</label>
-                                            <input type="color" name="wm_color" value="#ffffff" style="width: 100%;">
-                                        </div>
-                                        <div style="flex: 1;">
-                                            <label>Opacity (0-255): <span id="val-wm-opacity">128</span></label>
-                                            <input type="range" name="wm_opacity" min="0" max="255" value="128" oninput="document.getElementById('val-wm-opacity').innerText=this.value" style="width: 100%;">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label>Or Image Watermark (Logo):</label>
-                                        <input type="file" name="wm_image" accept="image/*" style="width: 100%;">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="format-selection" style="margin-top: 1.5rem;">
-                            <span class="label-header">Output Format:</span>
-                            <div class="input-row">
-                                <select name="save_format" id="save_format">
-                                    <option value="AUTO">Auto (Keep original or use PNG for transparency)</option>
-                                    <option value="JPEG">JPEG</option>
-                                    <option value="PNG">PNG</option>
-                                    <option value="WEBP">WEBP</option>
-                                    <option value="GIF">GIF</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Preview & Action Buttons -->
-                    <div class="action-buttons">
-                        <button type="button" id="preview-btn" onclick="applyEdit()">Apply Change</button>
-                        <button type="button" id="download-btn" class="download-btn" style="display: none;" onclick="downloadImage()">Save Image 💾</button>
-                    </div>
-
-                    <!-- Preview Area -->
-                    <div id="preview-container" class="preview-container single-preview">
-                        <div class="preview-box" style="width: 100%; border: none;">
-                            <span class="label-header">Live Preview</span>
-                            <img id="preview-live" src="" alt="Live Preview" style="max-height: 60vh;">
-                        </div>
-                    </div>
+                <div class="export-section">
+                    <label class="setting-label">Output Format</label>
+                    <select name="save_format" id="save_format">
+                        <option value="AUTO">Auto (Keep original)</option>
+                        <option value="JPEG">JPEG</option>
+                        <option value="PNG">PNG</option>
+                        <option value="WEBP">WEBP</option>
+                        <option value="GIF">GIF</option>
+                    </select>
                 </div>
-            </form>
-        </div>
+            </div>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-        <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    </body>
+            <div class="settings-footer">
+                <button type="button" id="download-btn" class="download-btn" style="display: none;" onclick="downloadImage()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Save Image
+                </button>
+            </div>
+        </aside>
+    </form>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
 </html>

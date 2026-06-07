@@ -8,10 +8,10 @@ A browser-based image processing tool created with Flask. It allows you to:
 
 ## 🌟 Features
 
-- **Web Interface**: Simple and responsive UI with a Dark/Light Mode toggle and live progress overlays.
-- **Interactive Workflow**: Step-by-step process with a native drag & drop upload zone and an interactive `Cropper.js` interface.
-- **Undo/Redo History**: Stack multiple edits and seamlessly revert mistakes using the built-in session state manager.
-- **Live Preview**: See a live preview of your edits instantly on the canvas.
+- **Brutalist Web Interface**: A bold, high-contrast Brutalist UI with a Dark/Light Mode toggle and sharp, responsive interactions.
+- **Seamless Auto-Commit Workflow**: Edit properties and seamlessly transition between tools without ever hitting 'Apply'. The system intelligently commits your changes to an undo stack as you work.
+- **Undo/Redo History**: Stack multiple edits and seamlessly revert mistakes using the built-in session state manager, or use 'Reset All' to start fresh.
+- **Blazing-Fast Live Preview**: See a live preview of your edits instantly on the canvas. The engine dynamically downscales images during slider adjustments for native, sub-50ms desktop-like performance.
 - **Batch Processing**: Upload multiple images, configure a bulk edit (e.g., watermark all images), and download them as a ZIP archive.
 - **RESTful API**: Exposes a `/api/v1/process` endpoint for developers to process images programmatically.
 - **Processing Modes**:

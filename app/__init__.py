@@ -5,7 +5,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
 
-limiter = Limiter(key_func=get_remote_address, default_limits=["200 per day", "50 per hour"], storage_uri="memory://")
+limiter = Limiter(key_func=get_remote_address, default_limits=["10000 per day", "5000 per hour"], storage_uri="memory://")
 cache = Cache()
 
 def create_app(config_name='default'):
