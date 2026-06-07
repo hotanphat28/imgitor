@@ -8,18 +8,23 @@ A browser-based image processing tool created with Flask. It allows you to:
 
 ## 🌟 Features
 
-- **Web Interface**: Simple and responsive dark UI with a progress loader overlay.
-- **Interactive Workflow**: Step-by-step process with a native drag & drop upload zone.
-- **Live Preview**: See "Before" and "After" comparisons before saving.
+- **Web Interface**: Simple and responsive UI with a Dark/Light Mode toggle and live progress overlays.
+- **Interactive Workflow**: Step-by-step process with a native drag & drop upload zone and an interactive `Cropper.js` interface.
+- **Undo/Redo History**: Stack multiple edits and seamlessly revert mistakes using the built-in session state manager.
+- **Live Preview**: See a live preview of your edits instantly on the canvas.
+- **Batch Processing**: Upload multiple images, configure a bulk edit (e.g., watermark all images), and download them as a ZIP archive.
+- **RESTful API**: Exposes a `/api/v1/process` endpoint for developers to process images programmatically.
 - **Processing Modes**:
     1. **Resize**: By resolution (Lanczos resampling).
-    2. **Crop**: Precise coordinate-based cropping.
+    2. **Crop**: Interactive visual cropping with preset aspect ratios.
     3. **Rotate**: Rotation by specified degrees.
     4. **Filters**: Apply Grayscale, Sepia, Blue Tone, or Warm Tone.
-    5. **Remove Background**: AI-powered background removal.
+    5. **Adjustments**: Fine-tune Brightness, Contrast, Saturation, and Sharpness.
+    6. **Watermark**: Protect images with text (opacity/color) or image logos.
+    7. **Remove Background**: AI-powered background removal.
 - **Format Conversion**: Choose output format or let the app automatically decide to preserve transparency.
-- **Security**: Local rate limiting included to prevent endpoint abuse.
-- **Modular Design**: Scalable Flask application structure using the factory pattern.
+- **Security & Performance**: Rate limiting prevents abuse, while local caching ensures lightning-fast undo/redo.
+- **Modular Design**: Scalable Flask application structure using blueprints and background threads.
 
 ## 🛠️ Prerequisites
 

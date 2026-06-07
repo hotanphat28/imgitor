@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-06-07
+### Added
+- **Batch Processing**: Upload multiple images and apply operations to all of them in the background, downloading the result as a ZIP archive.
+- **Watermarking**: Add text (with color and opacity) or image logo watermarks to protect images.
+- **RESTful API**: Added `/api/v1/process` endpoint secured by an API key for programmatic image processing.
+- **Dark Mode**: Implemented a theme toggle switch supporting light and dark modes.
+- **Live Preview**: Replaced the Before/After view with a clean, in-place Live Preview.
+
+## [1.2.0] - 2026-06-07
+### Added
+- **Undo/Redo Stack**: Full state management for stacking multiple edits and reverting them seamlessly.
+- **Interactive Cropping**: Integrated `Cropper.js` for an interactive, visual cropping experience with preset aspect ratios.
+- **Advanced Adjustments**: Added fine-tuned sliders for Brightness, Contrast, Saturation, and Sharpness.
+- **Result Caching**: Integrated `Flask-Caching` for instant playback of edit history without re-processing.
+
 ## [1.1.0] - 2026-06-07
 ### Added
 - Native drag and drop support for image uploads.

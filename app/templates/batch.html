@@ -1,17 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Image Tool - Web</title>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
-            rel="stylesheet">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+        <title>Batch Processing - Imgitor</title>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     </head>
-
     <body>
         <div class="theme-switch-wrapper">
             <label class="theme-switch" for="theme-checkbox">
@@ -22,53 +17,41 @@
         </div>
 
         <nav class="top-nav">
-            <a href="{{ url_for('main.index') }}" class="nav-btn active">Single Image</a>
-            <a href="{{ url_for('main.batch') }}" class="nav-btn">Batch Processing</a>
+            <a href="{{ url_for('main.index') }}" class="nav-btn">Single Image</a>
+            <a href="{{ url_for('main.batch') }}" class="nav-btn active">Batch Processing</a>
         </nav>
 
         <div class="container">
             <div id="loader-overlay">
                 <div class="spinner"></div>
-                <p>Processing...</p>
+                <p id="loader-text">Processing Batch...</p>
             </div>
-            <h1>Image Processor 🚀</h1>
-            <form action="{{ url_for('main.upload_file') }}" method="POST" enctype="multipart/form-data" id="main-form">
-                <input type="hidden" name="session_id" id="session_id" value="">
-                <input type="hidden" name="current_step" id="current_step" value="0">
-                <input type="hidden" name="action" id="form_action" value="init">
-
-                <!-- STEP 1: UPLOAD -->
+            <h1>Batch Processor 📦</h1>
+            <form id="batch-form">
+                <!-- STEP 1: UPLOAD MULTIPLE -->
                 <div id="step-1-upload">
                     <div class="upload-area">
-                        <label for="image" class="upload-label">
+                        <label for="images" class="upload-label">
                             <span class="icon">📁</span>
-                            <span>Click to Upload Image</span>
-                            <input type="file" name="image" id="image" accept="image/*" required
-                                onchange="handleFileUpload(this)">
+                            <span>Select Multiple Images</span>
+                            <input type="file" name="images" id="images" accept="image/*" multiple required onchange="updateFileCount(this)">
                         </label>
                     </div>
+                    <p id="file-count" style="text-align: center; margin-top: 10px; color: var(--text-secondary);"></p>
                 </div>
 
-                <!-- STEP 2: EDIT & PREVIEW -->
-                <div id="step-2-edit" style="display: none;">
+                <!-- STEP 2: EDIT SETTINGS -->
+                <div id="step-2-edit" style="display: none; margin-top: 2rem;">
                     <div class="step-header">
-                        <span class="label-header">Edit Image Settings</span>
-                        <div>
-                            <button type="button" class="text-btn" onclick="undoStep()" id="undo-btn" disabled>↩ Undo</button>
-                            <button type="button" class="text-btn" onclick="redoStep()" id="redo-btn" disabled style="margin-left: 10px;">↪ Redo</button>
-                            <button type="button" class="text-btn" onclick="startOver()" style="margin-left: 15px;">↺ Start Over</button>
-                        </div>
+                        <span class="label-header">Batch Settings</span>
+                        <button type="button" class="text-btn" onclick="startOver()">↺ Start Over</button>
                     </div>
 
                     <div class="controls-section">
-                        <span class="label-header">Select Action:</span>
+                        <span class="label-header">Select Action to apply to all:</span>
                         <div class="radio-group">
-                            <input type="radio" id="res" name="mode" value="resolution" checked
-                                onchange="toggleInputs()">
+                            <input type="radio" id="res" name="mode" value="resolution" checked onchange="toggleInputs()">
                             <label for="res">Resize</label>
-
-                            <input type="radio" id="crop" name="mode" value="crop" onchange="toggleInputs()">
-                            <label for="crop">Crop</label>
 
                             <input type="radio" id="rotate" name="mode" value="rotate" onchange="toggleInputs()">
                             <label for="rotate">Rotate</label>
@@ -90,25 +73,10 @@
                             <div id="resolution-inputs">
                                 <span class="label-header">Enter Dimensions (px):</span>
                                 <div class="input-row">
-                                    <input type="number" name="width" placeholder="W" min="1">
+                                    <input type="number" name="width" placeholder="W" min="1" value="500">
                                     <span>x</span>
-                                    <input type="number" name="height" placeholder="H" min="1">
+                                    <input type="number" name="height" placeholder="H" min="1" value="500">
                                 </div>
-                            </div>
-                            <div id="crop-inputs" style="display:none;">
-                                <span class="label-header">Crop Aspect Ratio:</span>
-                                <div class="input-row">
-                                    <select id="crop_aspect_ratio" onchange="setCropAspectRatio(this.value)">
-                                        <option value="NaN">Free Form</option>
-                                        <option value="1">1:1 Square</option>
-                                        <option value="1.77777777778">16:9 Widescreen</option>
-                                        <option value="1.33333333333">4:3 Standard</option>
-                                    </select>
-                                </div>
-                                <input type="hidden" name="crop_x" id="crop_x">
-                                <input type="hidden" name="crop_y" id="crop_y">
-                                <input type="hidden" name="crop_w" id="crop_w">
-                                <input type="hidden" name="crop_h" id="crop_h">
                             </div>
                             <div id="rotate-inputs" style="display:none;">
                                 <span class="label-header">Rotate Degrees:</span>
@@ -177,35 +145,120 @@
                             <span class="label-header">Output Format:</span>
                             <div class="input-row">
                                 <select name="save_format" id="save_format">
-                                    <option value="AUTO">Auto (Keep original or use PNG for transparency)</option>
+                                    <option value="AUTO">Auto (Keep original format)</option>
                                     <option value="JPEG">JPEG</option>
                                     <option value="PNG">PNG</option>
                                     <option value="WEBP">WEBP</option>
-                                    <option value="GIF">GIF</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Preview & Action Buttons -->
                     <div class="action-buttons">
-                        <button type="button" id="preview-btn" onclick="applyEdit()">Apply Change</button>
-                        <button type="button" id="download-btn" class="download-btn" style="display: none;" onclick="downloadImage()">Save Image 💾</button>
+                        <button type="button" onclick="startBatch()">Start Batch Process 🚀</button>
                     </div>
-
-                    <!-- Preview Area -->
-                    <div id="preview-container" class="preview-container single-preview">
-                        <div class="preview-box" style="width: 100%; border: none;">
-                            <span class="label-header">Live Preview</span>
-                            <img id="preview-live" src="" alt="Live Preview" style="max-height: 60vh;">
-                        </div>
-                    </div>
+                </div>
+                
+                <!-- STEP 3: DOWNLOAD -->
+                <div id="step-3-download" style="display: none; margin-top: 2rem; text-align: center;">
+                    <h2 style="color: var(--accent-color);">Batch Processing Complete!</h2>
+                    <p>All your images have been processed and packed into a ZIP file.</p>
+                    <a id="batch-download-btn" href="#" class="download-btn" style="display: inline-flex;">Download ZIP Archive 💾</a>
                 </div>
             </form>
         </div>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-        <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    </body>
+        <script>
+            // Initialize dark mode from localStorage
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            document.getElementById('theme-checkbox').checked = isDark;
+            if (isDark) document.body.classList.add('dark-mode');
 
+            function toggleTheme(isDark) {
+                if (isDark) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'true');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'false');
+                }
+            }
+
+            function updateFileCount(input) {
+                if (input.files.length > 0) {
+                    document.getElementById('file-count').innerText = `${input.files.length} images selected.`;
+                    document.getElementById('step-2-edit').style.display = 'block';
+                }
+            }
+
+            function toggleInputs() {
+                const mode = document.querySelector('input[name="mode"]:checked').value;
+                document.getElementById('resolution-inputs').style.display = (mode === 'resolution') ? 'block' : 'none';
+                document.getElementById('filter-inputs').style.display = (mode === 'filter') ? 'block' : 'none';
+                document.getElementById('rotate-inputs').style.display = (mode === 'rotate') ? 'block' : 'none';
+                document.getElementById('adjust-inputs').style.display = (mode === 'adjust') ? 'block' : 'none';
+                document.getElementById('watermark-inputs').style.display = (mode === 'watermark') ? 'block' : 'none';
+            }
+
+            function startOver() {
+                document.getElementById('batch-form').reset();
+                document.getElementById('file-count').innerText = '';
+                document.getElementById('step-2-edit').style.display = 'none';
+                document.getElementById('step-3-download').style.display = 'none';
+                toggleInputs();
+            }
+
+            let pollInterval = null;
+
+            function startBatch() {
+                const form = document.getElementById('batch-form');
+                const formData = new FormData(form);
+                const loaderOverlay = document.getElementById('loader-overlay');
+                const loaderText = document.getElementById('loader-text');
+                
+                loaderOverlay.style.display = 'flex';
+                loaderText.innerText = 'Starting batch job...';
+
+                fetch('/batch/start', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        loaderOverlay.style.display = 'none';
+                        return;
+                    }
+                    
+                    const jobId = data.job_id;
+                    pollInterval = setInterval(() => {
+                        fetch(`/batch/status/${jobId}`)
+                        .then(res => res.json())
+                        .then(status => {
+                            if (status.status === 'completed') {
+                                clearInterval(pollInterval);
+                                loaderOverlay.style.display = 'none';
+                                document.getElementById('step-1-upload').style.display = 'none';
+                                document.getElementById('step-2-edit').style.display = 'none';
+                                document.getElementById('step-3-download').style.display = 'block';
+                                document.getElementById('batch-download-btn').href = `/batch/download/${jobId}`;
+                            } else if (status.status === 'error') {
+                                clearInterval(pollInterval);
+                                loaderOverlay.style.display = 'none';
+                                alert('Batch processing failed: ' + status.error);
+                            } else {
+                                loaderText.innerText = `Processing: ${status.done} / ${status.total}`;
+                            }
+                        });
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred starting the batch job.');
+                    loaderOverlay.style.display = 'none';
+                });
+            }
+        </script>
+    </body>
 </html>

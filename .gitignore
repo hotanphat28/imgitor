@@ -137,3 +137,10 @@ cython_debug/
 # IDE settings
 .vscode/
 .idea/
+
+# Imgitor specific
+temp_sessions/
+flask_cache/
+flask_session/
+app_cache/
+*.zip

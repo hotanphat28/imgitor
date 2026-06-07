@@ -1,19 +1,28 @@
 /* Modern Dark UI Redesign - Reference Inspired */
 :root {
-    --bg-color: #101010;
-    --card-bg: #141414;
-    /* Slightly lighter than BG */
-    --text-primary: #F4F4F4;
+    --bg-color: #f9f9f9;
+    --card-bg: #ffffff;
+    --text-primary: #101010;
     --text-secondary: #646464;
-    --accent-color: #FFC90E;
-    --accent-glow: rgba(255, 201, 14, 0.4);
-    --border-color: #333333;
-    /* Darker border for subtlety */
-    --border-active: #646464;
+    --accent-color: #f5b041;
+    --accent-glow: rgba(245, 176, 65, 0.4);
+    --border-color: #e0e0e0;
+    --border-active: #a0a0a0;
     --border-radius: 16px;
     --font-heading: 'Space Grotesk', sans-serif;
     --font-mono: 'Space Mono', monospace;
     --transition: all 0.3s ease;
+}
+
+body.dark-mode {
+    --bg-color: #101010;
+    --card-bg: #141414;
+    --text-primary: #F4F4F4;
+    --text-secondary: #aaaaaa;
+    --accent-color: #FFC90E;
+    --accent-glow: rgba(255, 201, 14, 0.4);
+    --border-color: #333333;
+    --border-active: #646464;
 }
 
 body {
@@ -156,7 +165,7 @@ input[type="file"]::file-selector-button:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    background: #0a0a0a;
+    background: var(--bg-color);
     padding: 5px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
@@ -204,7 +213,7 @@ input[type="file"]::file-selector-button:hover {
 #inputs-frame {
     margin-top: 1.5rem;
     padding: 1.5rem;
-    background: #0a0a0a;
+    background: var(--bg-color);
     border-radius: 12px;
     border: 1px solid var(--border-color);
 }
@@ -338,7 +347,7 @@ button[type="submit"]:active,
 .preview-box {
     flex: 1;
     min-width: 200px;
-    background: #0a0a0a;
+    background: var(--bg-color);
     padding: 15px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
@@ -386,3 +395,76 @@ button[type="submit"]:active,
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* Nav & Theme Toggle */
+.top-nav {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 10px;
+}
+.nav-btn {
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+.nav-btn.active, .nav-btn:hover {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+.theme-switch-wrapper {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+    font-weight: bold;
+}
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--border-color);
+  transition: .4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: var(--bg-color);
+  transition: .4s;
+}
+input:checked + .slider {
+  background-color: var(--accent-color);
+}
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+.slider.round {
+  border-radius: 24px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}
+

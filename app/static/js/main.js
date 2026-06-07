@@ -1,87 +1,147 @@
+let cropper = null;
+
 function toggleInputs() {
 	const mode = document.querySelector('input[name="mode"]:checked').value;
 	document.getElementById('resolution-inputs').style.display = (mode === 'resolution') ? 'block' : 'none';
 	document.getElementById('filter-inputs').style.display = (mode === 'filter') ? 'block' : 'none';
 	document.getElementById('crop-inputs').style.display = (mode === 'crop') ? 'block' : 'none';
 	document.getElementById('rotate-inputs').style.display = (mode === 'rotate') ? 'block' : 'none';
+	document.getElementById('adjust-inputs').style.display = (mode === 'adjust') ? 'block' : 'none';
+	document.getElementById('watermark-inputs').style.display = (mode === 'watermark') ? 'block' : 'none';
+
+    if (mode === 'crop') {
+        initCropper();
+    } else {
+        destroyCropper();
+    }
+}
+
+function initCropper() {
+    const liveImg = document.getElementById('preview-live');
+    if (!cropper && liveImg.src) {
+        cropper = new Cropper(liveImg, {
+            viewMode: 1,
+            aspectRatio: NaN,
+            autoCropArea: 0.8
+        });
+    }
+}
+
+function destroyCropper() {
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+}
+
+function setCropAspectRatio(ratio) {
+    if (cropper) {
+        cropper.setAspectRatio(parseFloat(ratio));
+    }
 }
 
 function handleFileUpload(input) {
 	const file = input.files[0];
 	if (file) {
-		const reader = new FileReader();
-		reader.onload = function (e) {
-			document.getElementById('preview-before').src = e.target.result;
-			document.getElementById('preview-after').src = e.target.result;
-			// Switch steps
-			document.getElementById('step-1-upload').style.display = 'none';
-			document.getElementById('step-2-edit').style.display = 'block';
-		}
-		reader.readAsDataURL(file);
+        document.getElementById('form_action').value = 'init';
+        submitForm();
 	}
+}
+
+function submitForm() {
+    const form = document.getElementById('main-form');
+    const formData = new FormData(form);
+    const action = document.getElementById('form_action').value;
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+
+    if (action === 'edit' && mode === 'crop' && cropper) {
+        const data = cropper.getData(true);
+        formData.set('crop_x', data.x);
+        formData.set('crop_y', data.y);
+        formData.set('crop_w', data.width);
+        formData.set('crop_h', data.height);
+    }
+    
+    formData.set('preview', 'true');
+
+    const loaderOverlay = document.getElementById('loader-overlay');
+	if (loaderOverlay) loaderOverlay.style.display = 'flex';
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('session_id').value = data.session_id;
+            document.getElementById('current_step').value = data.current_step;
+            
+            document.getElementById('preview-live').src = data.image;
+            
+            // Switch steps if just uploaded
+            document.getElementById('step-1-upload').style.display = 'none';
+            document.getElementById('step-2-edit').style.display = 'block';
+            document.getElementById('download-btn').style.display = 'inline-flex';
+            
+            updateUndoRedoButtons();
+            
+            if (cropper) {
+                cropper.replace(data.image);
+            }
+        } else {
+            alert('Error processing image');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred');
+    })
+    .finally(() => {
+        if (loaderOverlay) loaderOverlay.style.display = 'none';
+    });
+}
+
+function applyEdit() {
+    document.getElementById('form_action').value = 'edit';
+    submitForm();
+}
+
+function undoStep() {
+    document.getElementById('form_action').value = 'undo';
+    submitForm();
+}
+
+function redoStep() {
+    document.getElementById('form_action').value = 'redo';
+    submitForm();
+}
+
+function updateUndoRedoButtons() {
+    const step = parseInt(document.getElementById('current_step').value);
+    document.getElementById('undo-btn').disabled = (step <= 0);
+    document.getElementById('redo-btn').disabled = false; 
+}
+
+function downloadImage() {
+    document.getElementById('form_action').value = 'download';
+    document.getElementById('main-form').submit(); 
 }
 
 function startOver() {
-	// Reset form
-	document.querySelector('form').reset();
+	document.getElementById('main-form').reset();
+    destroyCropper();
 
-	// Reset previews
-	document.getElementById('preview-before').src = '';
-	document.getElementById('preview-after').src = '';
+	document.getElementById('preview-live').src = '';
 
-	// Reset UI
 	document.getElementById('step-2-edit').style.display = 'none';
 	document.getElementById('step-1-upload').style.display = 'block';
 	document.getElementById('download-btn').style.display = 'none';
+    
+    document.getElementById('session_id').value = '';
+    document.getElementById('current_step').value = '0';
 
-	// Reset inputs visibility to default (resolution)
 	toggleInputs();
-}
-
-function getPreview() {
-	const form = document.querySelector('form');
-	const formData = new FormData(form);
-	formData.append('preview', 'true');
-
-	const btn = document.getElementById('preview-btn');
-	const originalText = btn.innerText;
-	btn.innerText = 'Processing...';
-	btn.disabled = true;
-
-	const loaderOverlay = document.getElementById('loader-overlay');
-	if (loaderOverlay) {
-		loaderOverlay.style.display = 'flex';
-	}
-
-	fetch('/upload', {
-		method: 'POST',
-		body: formData
-	})
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				const afterImg = document.getElementById('preview-after');
-				afterImg.src = data.image;
-
-				const downloadBtn = document.getElementById('download-btn');
-				downloadBtn.href = data.image; // Data URI for download
-				downloadBtn.download = data.filename;
-				downloadBtn.style.display = 'inline-block';
-			} else {
-				alert('Error generating preview');
-			}
-		})
-		.catch(error => {
-			console.error('Error:', error);
-			alert('An error occurred');
-		})
-		.finally(() => {
-			btn.innerText = originalText;
-			btn.disabled = false;
-			if (loaderOverlay) {
-				loaderOverlay.style.display = 'none';
-			}
-		});
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -118,4 +178,19 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 	}
+
+    // Initialize dark mode from localStorage
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    document.getElementById('theme-checkbox').checked = isDark;
+    if (isDark) document.body.classList.add('dark-mode');
 });
+
+function toggleTheme(isDark) {
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('darkMode', 'true');
+    } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('darkMode', 'false');
+    }
+}

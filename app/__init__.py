@@ -3,14 +3,21 @@ import logging
 from config import config
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_caching import Cache
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["200 per day", "50 per hour"], storage_uri="memory://")
+cache = Cache()
 
 def create_app(config_name='default'):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
+    app.config['CACHE_TYPE'] = 'FileSystemCache'
+    app.config['CACHE_DIR'] = 'app_cache'
+    app.config['CACHE_DEFAULT_TIMEOUT'] = 300
+
     limiter.init_app(app)
+    cache.init_app(app)
 
     # Configure logging
     if not app.debug and not app.testing:
@@ -22,5 +29,8 @@ def create_app(config_name='default'):
 
     from app.routes import main as main_blueprint
     app.register_blueprint(main_blueprint)
+
+    from app.api import api_bp
+    app.register_blueprint(api_bp)
 
     return app
