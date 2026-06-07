@@ -1,23 +1,25 @@
 # Image Processing Web Tool (Imgitor)
 
 A browser-based image processing tool created with Flask. It allows you to:
-- Resize images by resolution (Height x Width).
-- Resize images by checking the target file size (KB).
-- Convert images to Black & White (Grayscale).
-- Remove background from images.
+- Resize, crop, and rotate images.
+- Convert images to different formats (JPEG, PNG, WEBP, GIF).
+- Apply color filters (Grayscale, Sepia, etc.).
+- Remove backgrounds from images using AI.
 
 ## 🌟 Features
 
-- **Web Interface**: Simple and responsive UI using HTML5 & CSS (Space Grotesk & Space Mono fonts).
-- **Interactive Workflow**: Step-by-step process (Upload -> Edit -> Preview -> Save).
+- **Web Interface**: Simple and responsive dark UI with a progress loader overlay.
+- **Interactive Workflow**: Step-by-step process with a native drag & drop upload zone.
 - **Live Preview**: See "Before" and "After" comparisons before saving.
-- **Image Upload**: Supports common formats (JPG, PNG, WebP, etc.).
 - **Processing Modes**:
-    1. **By Resolution**: Resize using Lanczos resampling.
-    2. **By File Size**: Compress JPEG images to meet a target size in KB.
-    3. **Black & White**: Convert images to grayscale.
-    4. **Remove Background**: AI-powered background removal.
-- **Modular Design**: Refactored into a scalable Flask application structure.
+    1. **Resize**: By resolution (Lanczos resampling).
+    2. **Crop**: Precise coordinate-based cropping.
+    3. **Rotate**: Rotation by specified degrees.
+    4. **Filters**: Apply Grayscale, Sepia, Blue Tone, or Warm Tone.
+    5. **Remove Background**: AI-powered background removal.
+- **Format Conversion**: Choose output format or let the app automatically decide to preserve transparency.
+- **Security**: Local rate limiting included to prevent endpoint abuse.
+- **Modular Design**: Scalable Flask application structure using the factory pattern.
 
 ## 🛠️ Prerequisites
 

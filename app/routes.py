@@ -1,5 +1,5 @@
 from flask import Blueprint, request, render_template, send_file, current_app
-from app.utils import resize_by_resolution, apply_filter, remove_background
+from app.utils import resize_by_resolution, apply_filter, remove_background, crop_image, rotate_image
 from PIL import Image
 import io
 import os
@@ -39,7 +39,8 @@ def upload_file():
         img = Image.open(file.stream)
         base_filename, ext = os.path.splitext(filename)
         processed_img = None
-        save_format = "JPEG"
+        user_format = request.form.get('save_format', 'AUTO')
+        save_format = "PNG" if img.mode in ('RGBA', 'P') else "JPEG"
         suffix = "_processed"
 
         # Handle modes
@@ -47,28 +48,49 @@ def upload_file():
             width, height = int(request.form['width']), int(request.form['height'])
             processed_img = resize_by_resolution(img, width, height)
             suffix = "_resized"
-            save_format = "PNG" if img.mode == 'RGBA' else "JPEG"
+            
+        elif mode == 'crop':
+            x, y = int(request.form.get('crop_x', 0)), int(request.form.get('crop_y', 0))
+            w, h = int(request.form.get('crop_w', img.width)), int(request.form.get('crop_h', img.height))
+            processed_img = crop_image(img, x, y, w, h)
+            suffix = "_cropped"
+
+        elif mode == 'rotate':
+            deg = int(request.form.get('rotate_deg', 90))
+            processed_img = rotate_image(img, deg)
+            suffix = "_rotated"
         
         elif mode == 'filter':
             filter_type = request.form.get('filter_type', 'grayscale')
             processed_img = apply_filter(img, filter_type)
             suffix = f"_{filter_type}"
-            save_format = "PNG" if img.mode == 'RGBA' else "JPEG"
         
         elif mode == 'remove_bg':
             processed_img = remove_background(img)
             suffix = "_nobg"
-            save_format = "PNG"
+            if user_format == 'AUTO':
+                save_format = "PNG"
 
         if not processed_img:
             current_app.logger.warning(f'Invalid mode requested: {mode}')
             return "Error: Invalid mode.", 400
 
+        if user_format != 'AUTO':
+            save_format = user_format
+
         # Save processed image to buffer
         buffer = io.BytesIO()
         if save_format == 'JPEG' and processed_img.mode in ('RGBA', 'LA', 'P'):
-            processed_img = processed_img.convert('RGB')
-        
+            # Convert with white background for transparent images saved as JPEG
+            bg = Image.new('RGB', processed_img.size, (255, 255, 255))
+            if processed_img.mode == 'RGBA':
+                bg.paste(processed_img, mask=processed_img.split()[3])
+            else:
+                bg.paste(processed_img)
+            processed_img = bg
+        elif save_format in ('PNG', 'WEBP', 'GIF') and processed_img.mode == 'P':
+            processed_img = processed_img.convert('RGBA')
+
         processed_img.save(buffer, format=save_format)
         buffer.seek(0)
         

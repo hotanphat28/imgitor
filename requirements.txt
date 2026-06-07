@@ -5,3 +5,4 @@ rembg
 waitress
 python-dotenv
 pytest
+Flask-Limiter

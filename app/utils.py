@@ -6,6 +6,14 @@ def resize_by_resolution(img, width, height):
     """Resizes the image to specific pixel dimensions."""
     return img.resize((width, height), Image.Resampling.LANCZOS)
 
+def crop_image(img, x, y, w, h):
+    """Crops the image based on coordinates and dimensions."""
+    return img.crop((x, y, x + w, y + h))
+
+def rotate_image(img, degrees):
+    """Rotates the image by the specified degrees."""
+    return img.rotate(-degrees, expand=True)
+
 def apply_filter(img, filter_type):
     """Applies a specific color filter to the image."""
     img = img.convert("RGB")

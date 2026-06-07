@@ -1,10 +1,16 @@
 from flask import Flask
 import logging
 from config import config
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address, default_limits=["200 per day", "50 per hour"], storage_uri="memory://")
 
 def create_app(config_name='default'):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+
+    limiter.init_app(app)
 
     # Configure logging
     if not app.debug and not app.testing:
