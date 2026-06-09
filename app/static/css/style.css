@@ -1,17 +1,37 @@
-/* Brutalist UI Redesign */
+/* Brutalist UI Redesign & Standardized Tokens */
 :root {
-    --bg-color: #F4F4F4;
+    /* Required Brand Tokens (Design System) */
+    --primary: #101010;
+    --primary-dark: #000000;
+    --primary-pale: #F4F4F4;
+    --bg-dark: #101010;
+    --bg-dark-mid: #1A1A1A;
+    --bg-dark-deep: #000000;
+    --bg-warm: #FAFAFA;
+    --accent: #101010;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Space Grotesk', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    
+    /* Universal Status Colors */
+    --status-success: #22A861;
+    --status-warning: #E5A00D;
+    --status-error: #DC3545;
+    --status-info: #3B82F6;
+    --status-neutral: #6B7280;
+
+    /* Semantic / Brutalist Overrides */
+    --bg-color: var(--primary-pale);
     --canvas-bg: #FFFFFF;
     --sidebar-bg: #FFFFFF;
-    --text-primary: #101010;
+    --text-primary: var(--primary);
     --text-secondary: #888888;
-    --accent-color: #101010; 
+    --accent-color: var(--accent);
     --accent-hover: #FFFFFF;
-    --border-color: #101010;
-    --border-radius: 0px; /* Strict brutalism */
-    --font-heading: 'Space Mono', monospace;
-    --font-mono: 'Space Mono', monospace;
-    --danger-color: #101010;
+    --border-color: var(--primary);
+    --border-radius: 0px;
+    --font-heading: var(--font-display);
+    --danger-color: var(--status-error);
     --border-width: 3px;
 }
 
@@ -372,6 +392,13 @@ body.app-body {
     outline: none;
     background: var(--text-primary);
     color: var(--bg-color);
+}
+.input-row input:focus-visible, .input-row select:focus-visible, .export-section select:focus-visible,
+.nav-btn:focus-visible, .tool-btn:focus-visible, .primary-btn:focus-visible, .icon-btn:focus-visible,
+.theme-switch:focus-visible, .download-btn:focus-visible, .upload-area:focus-visible, .upload-label:focus-visible,
+input[type=range]:focus-visible, .color-picker:focus-visible, .modal-footer .btn:focus-visible {
+    outline: 3px solid var(--text-primary);
+    outline-offset: 2px;
 }
 
 .x-divider {
@@ -755,4 +782,73 @@ input[type=range]::-webkit-slider-thumb {
 .modal-footer .btn-primary:hover {
     background: var(--bg-color);
     color: var(--text-primary);
+}
+
+/* Mobile Responsive Layout */
+@media (max-width: 768px) {
+    .app-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar-left {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        border-right: none;
+        border-bottom: var(--border-width) solid var(--border-color);
+        padding: 0;
+        justify-content: space-between;
+    }
+    
+    .logo {
+        margin-bottom: 0;
+        border-bottom: none;
+        width: auto;
+        padding: 1rem;
+    }
+    
+    .nav-links, .toolbar-icons {
+        flex-direction: row;
+        width: auto;
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+    
+    .nav-btn, .tool-btn {
+        width: 60px;
+        border-bottom: none;
+        border-left: var(--border-width) solid var(--border-color);
+    }
+    
+    .bottom-actions {
+        width: 60px;
+        margin-top: 0;
+        border-top: none;
+        border-left: var(--border-width) solid var(--border-color);
+    }
+    
+    .sidebar-right {
+        width: 100%;
+        height: 40vh; /* Adjust as needed */
+        border-left: none;
+        border-top: var(--border-width) solid var(--border-color);
+    }
+    
+    .canvas-wrapper {
+        height: 60vh;
+    }
+    
+    .history-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .icon-btn {
+        flex: 1;
+    }
+    
+    .modal-content {
+        width: 95%;
+    }
 }

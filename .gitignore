@@ -144,3 +144,4 @@ flask_cache/
 flask_session/
 app_cache/
 *.zip
+.agents

@@ -60,12 +60,19 @@ def upload_file():
     # Initialize a new session
     if action == 'init' or not session_id:
         if 'image' not in request.files:
-            return "Error: No file uploaded.", 400
+            return jsonify({"error": "No file uploaded."}), 400
         file = request.files['image']
         if not file or file.filename == '':
-            return "Error: Empty file provided.", 400
+            return jsonify({"error": "Empty file provided."}), 400
         if not allowed_file(file.filename):
-            return "Error: Invalid file type.", 400
+            return jsonify({"error": "Invalid file type."}), 400
+
+        try:
+            img = Image.open(file.stream)
+            img.verify()
+            file.stream.seek(0)
+        except Exception:
+            return jsonify({"error": "Invalid image file."}), 400
 
         session_id = str(uuid.uuid4())
         session_path = sessions_dir / session_id
@@ -82,9 +89,14 @@ def upload_file():
         return get_preview_response(session_path, 0, session_id, orig_name)
         
     # Existing session handling
+    try:
+        uuid.UUID(str(session_id))
+    except ValueError:
+        return jsonify({"error": "Invalid session ID format."}), 400
+
     session_path = sessions_dir / session_id
     if not session_path.exists():
-        return "Error: Session expired or invalid.", 400
+        return jsonify({"error": "Session expired or invalid."}), 400
         
     orig_name = "image"
     if (session_path / 'filename.txt').exists():
@@ -113,7 +125,7 @@ def upload_file():
         try:
             img_path = session_path / f"{current_step}.png"
             if not img_path.exists():
-                return "Error: Current state not found.", 400
+                return jsonify({"error": "Current state not found."}), 400
                 
             img = Image.open(img_path)
             
@@ -153,13 +165,13 @@ def upload_file():
             }
         except Exception as e:
             current_app.logger.error(f'Error processing image preview: {e}')
-            return f"An error occurred: {e}", 500
+            return jsonify({"error": f"An error occurred: {e}"}), 500
 
     elif action == 'estimate_size':
         try:
             img_path = session_path / f"{current_step}.png"
             if not img_path.exists():
-                return "Error: Current state not found.", 400
+                return jsonify({"error": "Current state not found."}), 400
                 
             img = Image.open(img_path)
             
@@ -200,14 +212,14 @@ def upload_file():
             }
         except Exception as e:
             current_app.logger.error(f'Error estimating size: {e}')
-            return f"An error occurred: {e}", 500
+            return jsonify({"error": f"An error occurred: {e}"}), 500
 
     elif action == 'edit':
         mode = request.form.get('mode', '')
         try:
             img_path = session_path / f"{current_step}.png"
             if not img_path.exists():
-                return "Error: Current state not found.", 400
+                return jsonify({"error": "Current state not found."}), 400
                 
             img = Image.open(img_path)
             
@@ -220,7 +232,7 @@ def upload_file():
 
             if not processed_img:
                 current_app.logger.warning(f'Invalid mode requested: {mode}')
-                return "Error: Invalid mode.", 400
+                return jsonify({"error": "Invalid mode."}), 400
 
             # Step forward
             current_step += 1
@@ -236,16 +248,16 @@ def upload_file():
 
         except ValueError as ve:
             current_app.logger.error(f'ValueError during processing: {ve}')
-            return "Error: Invalid input parameters.", 400
+            return jsonify({"error": "Invalid input parameters."}), 400
         except Exception as e:
             current_app.logger.error(f'Error processing image: {e}')
-            return f"An error occurred: {e}", 500
+            return jsonify({"error": f"An error occurred: {e}"}), 500
 
     elif action == 'download':
         try:
             img_path = session_path / f"{current_step}.png"
             if not img_path.exists():
-                return "Error: Current state not found.", 400
+                return jsonify({"error": "Current state not found."}), 400
                 
             img = Image.open(img_path)
             user_format = request.form.get('save_format', 'AUTO')
@@ -278,7 +290,7 @@ def upload_file():
             
         except Exception as e:
             current_app.logger.error(f'Error downloading image: {e}')
-            return f"An error occurred: {e}", 500
+            return jsonify({"error": f"An error occurred: {e}"}), 500
 
 def process_batch_background(job_id, session_path, mode, form_data, wm_image_path=None):
     try:

@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.6.0] - 2026-06-09
+### Added
+- **Background Cleanup**: A daemon thread now automatically deletes temporary session folders older than 2 hours to prevent disk space leaks.
+- **Mobile Responsiveness**: Refactored the UI with CSS media queries to ensure the application scales properly on phones and tablets.
+- **Accessibility**: Implemented high-contrast `:focus-visible` states across all interactive elements for keyboard navigation (WCAG 2.2 AA).
+- **Design Tokens**: Standardized CSS variables to use strict semantic tokens (`--primary`, `--bg-dark`, etc.).
+
+### Fixed
+- **Path Traversal Vulnerability**: Secured the `session_id` logic by strictly validating UUID formats, preventing attackers from escaping the temp directory.
+- **File Validation**: Replaced basic extension checks with deep `PIL.Image.verify()` validation to reject spoofed/malicious file uploads.
+- **API Error Formatting**: Fixed endpoints to consistently return JSON errors instead of raw strings to prevent frontend parsing crashes.
+
 
 ## [1.5.0] - 2026-06-09
 ### Added
