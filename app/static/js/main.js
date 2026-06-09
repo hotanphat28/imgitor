@@ -55,7 +55,6 @@ function executeModeSwitch(newMode) {
     currentMode = newMode;
     document.querySelector(`input[name="mode"][value="${newMode}"]`).checked = true;
 
-	document.getElementById('resolution-inputs').style.display = (newMode === 'resolution') ? 'block' : 'none';
 	document.getElementById('filter-inputs').style.display = (newMode === 'filter') ? 'block' : 'none';
 	document.getElementById('crop-inputs').style.display = (newMode === 'crop') ? 'block' : 'none';
 	document.getElementById('rotate-inputs').style.display = (newMode === 'rotate') ? 'block' : 'none';
@@ -186,6 +185,13 @@ function submitForm() {
             document.getElementById('current_step').value = data.current_step;
             
             document.getElementById('preview-live').src = data.image;
+
+            window.currentImageMeta = {
+                width: data.width,
+                height: data.height,
+                size_bytes: data.size_bytes,
+                format: data.format
+            };
             
             // Switch steps if just uploaded
             document.getElementById('step-1-upload').style.display = 'none';
@@ -205,6 +211,8 @@ function submitForm() {
 
             if (action === 'init') {
                 window.originalImageSrc = data.image;
+                // Initialize the default tool (e.g., crop) now that the image is visible
+                toggleInputs();
             }
             
             if (cropper) {
@@ -352,4 +360,212 @@ function toggleTheme(isDark) {
         document.body.classList.remove('dark-mode');
         localStorage.setItem('darkMode', 'false');
     }
+}
+
+// ==========================================
+// Resize Modal Logic
+// ==========================================
+let aspectLocked = true;
+let originalAspectRatio = 1;
+
+function formatBytes(bytes) {
+    if(bytes == null || isNaN(bytes)) return '0 B';
+    if(bytes < 1024) return bytes + ' B';
+    else if(bytes < 1048576) return (bytes / 1024).toFixed(0) + ' KB';
+    else return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function openResizeModal() {
+    document.getElementById('resize-modal').style.display = 'flex';
+    
+    // Initialize with current meta
+    const meta = window.currentImageMeta || { width: 100, height: 100, size_bytes: 0, format: 'PNG' };
+    
+    document.getElementById('resize_width').value = meta.width;
+    document.getElementById('resize_height').value = meta.height;
+    document.getElementById('resize_percentage').value = 100;
+    
+    originalAspectRatio = meta.width / meta.height;
+    
+    // Reset toggle to pixels
+    document.querySelector('input[name="resize_type"][value="pixels"]').checked = true;
+    toggleResizeType();
+    
+    // Reset quality/format
+    document.getElementById('resize_quality').value = 100;
+    handleQualityInput();
+    document.getElementById('resize_save_format').value = 'AUTO';
+    
+    // Populate current info
+    const currentStr = `${meta.width} x ${meta.height} pixels &nbsp;&nbsp;&nbsp; ${formatBytes(meta.size_bytes)} &nbsp;&nbsp;&nbsp; ${meta.format}`;
+    document.getElementById('current-info-val').innerHTML = currentStr;
+    document.getElementById('new-info-val').innerHTML = currentStr; // Init new same as current
+}
+
+function closeResizeModal() {
+    document.getElementById('resize-modal').style.display = 'none';
+}
+
+function toggleResizeType() {
+    const type = document.querySelector('input[name="resize_type"]:checked').value;
+    document.getElementById('resize-pixels-inputs').style.display = (type === 'pixels') ? 'flex' : 'none';
+    document.getElementById('resize-percentage-inputs').style.display = (type === 'percentage') ? 'flex' : 'none';
+    triggerEstimation();
+}
+
+function toggleAspectLock() {
+    aspectLocked = !aspectLocked;
+    const btn = document.getElementById('aspect-lock-btn');
+    if (aspectLocked) {
+        btn.classList.add('locked');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="lock-icon-svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
+        
+        // immediately correct height to match width
+        const w = parseInt(document.getElementById('resize_width').value) || 1;
+        document.getElementById('resize_height').value = Math.max(1, Math.round(w / originalAspectRatio));
+        triggerEstimation();
+    } else {
+        btn.classList.remove('locked');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"></path><line x1="8" y1="12" x2="16" y2="12"></line></svg>'; // Unlocked link icon
+    }
+}
+
+function handleResizeInput(source) {
+    if (source === 'width' && aspectLocked) {
+        const w = parseInt(document.getElementById('resize_width').value) || 1;
+        document.getElementById('resize_height').value = Math.max(1, Math.round(w / originalAspectRatio));
+    } else if (source === 'height' && aspectLocked) {
+        const h = parseInt(document.getElementById('resize_height').value) || 1;
+        document.getElementById('resize_width').value = Math.max(1, Math.round(h * originalAspectRatio));
+    }
+    triggerEstimation();
+}
+
+function handleQualityInput() {
+    const q = document.getElementById('resize_quality').value;
+    document.getElementById('resize-quality-val').innerText = q;
+    let lbl = '';
+    if(q >= 90) lbl = '(High)';
+    else if(q >= 60) lbl = '(Medium)';
+    else lbl = '(Low)';
+    document.getElementById('resize-quality-lbl').innerText = lbl;
+}
+
+const triggerEstimation = debounce(function() {
+    const form = document.getElementById('main-form');
+    if(!form) return;
+    
+    // We send a lightweight fetch to get new dimensions and size
+    const formData = new FormData(form);
+    formData.set('action', 'estimate_size');
+    formData.set('mode', 'resolution');
+    
+    // Pass modal values directly since they might not be fully synced with form if we changed names
+    const type = document.querySelector('input[name="resize_type"]:checked').value;
+    formData.set('resize_type', type);
+    if(type === 'percentage') {
+        formData.set('percentage', document.getElementById('resize_percentage').value);
+    } else {
+        formData.set('width', document.getElementById('resize_width').value);
+        formData.set('height', document.getElementById('resize_height').value);
+    }
+    
+    formData.set('quality', document.getElementById('resize_quality').value);
+    formData.set('save_format', document.getElementById('resize_save_format').value);
+    
+    document.getElementById('new-info-val').innerHTML = 'Calculating...';
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const newStr = `${data.width} x ${data.height} pixels &nbsp;&nbsp;&nbsp; ${formatBytes(data.size_bytes)} &nbsp;&nbsp;&nbsp; ${data.format}`;
+            document.getElementById('new-info-val').innerHTML = newStr;
+        } else {
+            document.getElementById('new-info-val').innerHTML = 'Error';
+        }
+    })
+    .catch(err => {
+        document.getElementById('new-info-val').innerHTML = 'Error';
+    });
+}, 300);
+
+function saveResize() {
+    // Before saving, ensure the form has the right values
+    const form = document.getElementById('main-form');
+    
+    // We need a hidden input for mode=resolution so that submitForm applies it
+    form.querySelectorAll('input[name="mode"]').forEach(r => r.checked = false);
+    let modeInput = form.querySelector('input[name="mode"][value="resolution"]');
+    if (modeInput) modeInput.checked = true; // Make sure resolution is the active mode when submitting
+    
+    // Also, sync the modal format to the main sidebar save format so when they download it uses it
+    document.getElementById('save_format').value = document.getElementById('resize_save_format').value;
+    
+    applyEdit();
+    closeResizeModal();
+    
+    // Restore the crop tool selection after a delay
+    setTimeout(() => {
+        const cropRadio = document.getElementById('crop');
+        if (cropRadio) {
+            cropRadio.checked = true;
+            executeModeSwitch('crop');
+        }
+    }, 100);
+}
+
+function downloadFromResize() {
+    const form = document.getElementById('main-form');
+    
+    form.querySelectorAll('input[name="mode"]').forEach(r => r.checked = false);
+    let modeInput = form.querySelector('input[name="mode"][value="resolution"]');
+    if (modeInput) modeInput.checked = true; 
+    
+    document.getElementById('save_format').value = document.getElementById('resize_save_format').value;
+    
+    // Set action to edit to commit the resize first
+    document.getElementById('form_action').value = 'edit';
+    const formData = new FormData(form);
+    
+    const loaderOverlay = document.getElementById('loader-overlay');
+    if (loaderOverlay) loaderOverlay.style.display = 'flex';
+    
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('current_step').value = data.current_step;
+            document.getElementById('preview-live').src = data.image;
+            closeResizeModal();
+            
+            // Now that the resize is applied, trigger the download
+            setTimeout(() => {
+                downloadImage();
+                if (loaderOverlay) loaderOverlay.style.display = 'none';
+            }, 100);
+            
+            // Restore crop mode
+            setTimeout(() => {
+                const cropRadio = document.getElementById('crop');
+                if (cropRadio) {
+                    cropRadio.checked = true;
+                    executeModeSwitch('crop');
+                }
+            }, 200);
+        } else {
+            alert('Error applying resize before download');
+            if (loaderOverlay) loaderOverlay.style.display = 'none';
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        if (loaderOverlay) loaderOverlay.style.display = 'none';
+    });
 }

@@ -25,14 +25,21 @@ def get_preview_response(session_path, current_step, session_id, original_filena
         return {"error": "Image state not found"}, 404
         
     with open(img_path, "rb") as image_file:
-        img_str = base64.b64encode(image_file.read()).decode('utf-8')
+        file_bytes = image_file.read()
+        img_str = base64.b64encode(file_bytes).decode('utf-8')
+        
+    img = Image.open(io.BytesIO(file_bytes))
         
     return {
         "success": True,
         "image": f"data:image/png;base64,{img_str}",
         "session_id": session_id,
         "current_step": current_step,
-        "filename": original_filename
+        "filename": original_filename,
+        "width": img.width,
+        "height": img.height,
+        "size_bytes": len(file_bytes),
+        "format": "PNG"
     }
 
 @main.route('/')
@@ -148,6 +155,53 @@ def upload_file():
             current_app.logger.error(f'Error processing image preview: {e}')
             return f"An error occurred: {e}", 500
 
+    elif action == 'estimate_size':
+        try:
+            img_path = session_path / f"{current_step}.png"
+            if not img_path.exists():
+                return "Error: Current state not found.", 400
+                
+            img = Image.open(img_path)
+            
+            mode = request.form.get('mode', '')
+            if mode == 'resolution':
+                from app.utils import process_image_core
+                img = process_image_core(img, mode, request.form) or img
+            
+            save_format = request.form.get('save_format', 'PNG')
+            if save_format == 'AUTO':
+                save_format = "PNG" if img.mode in ('RGBA', 'P') else "JPEG"
+                
+            quality = int(request.form.get('quality', 100))
+            
+            buffer = io.BytesIO()
+            if save_format == 'JPEG' and img.mode in ('RGBA', 'LA', 'P'):
+                bg = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'RGBA':
+                    bg.paste(img, mask=img.split()[3])
+                else:
+                    bg.paste(img)
+                img = bg
+            elif save_format in ('PNG', 'WEBP', 'GIF') and img.mode == 'P':
+                img = img.convert('RGBA')
+
+            save_params = {'format': save_format}
+            if save_format in ('JPEG', 'WEBP'):
+                save_params['quality'] = quality
+                
+            img.save(buffer, **save_params)
+            
+            return {
+                "success": True,
+                "width": img.width,
+                "height": img.height,
+                "size_bytes": len(buffer.getvalue()),
+                "format": save_format
+            }
+        except Exception as e:
+            current_app.logger.error(f'Error estimating size: {e}')
+            return f"An error occurred: {e}", 500
+
     elif action == 'edit':
         mode = request.form.get('mode', '')
         try:
@@ -211,7 +265,12 @@ def upload_file():
             elif save_format in ('PNG', 'WEBP', 'GIF') and img.mode == 'P':
                 img = img.convert('RGBA')
 
-            img.save(buffer, format=save_format)
+            quality = int(request.form.get('quality', 100))
+            save_params = {'format': save_format}
+            if save_format in ('JPEG', 'WEBP'):
+                save_params['quality'] = quality
+
+            img.save(buffer, **save_params)
             buffer.seek(0)
             
             base_filename, _ = os.path.splitext(orig_name)

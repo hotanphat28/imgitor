@@ -77,7 +77,16 @@ def process_image_core(img, mode, params, wm_image_stream=None):
     """Core image processing router shared by web, batch, and api."""
     processed_img = None
     if mode == 'resolution':
-        width, height = int(params.get('width', 100)), int(params.get('height', 100))
+        if params.get('resize_type') == 'percentage':
+            pct_str = params.get('percentage')
+            pct = float(pct_str) if pct_str else 100.0
+            width = max(1, int(img.width * (pct / 100.0)))
+            height = max(1, int(img.height * (pct / 100.0)))
+        else:
+            w_str = params.get('width')
+            h_str = params.get('height')
+            width = int(float(w_str)) if w_str else img.width
+            height = int(float(h_str)) if h_str else img.height
         processed_img = resize_by_resolution(img, width, height)
         
     elif mode == 'crop':

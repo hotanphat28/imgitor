@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-06-09
+### Added
+- **Resize Modal UI**: Introduced a dedicated popup modal for the Resize feature, triggered from the top bar.
+- **Advanced Resize Controls**: Added percentage-based scaling alongside pixel-based scaling, complete with an interactive aspect-ratio lock.
+- **Export Settings within Resize**: Directly select the output format (JPEG, PNG, WEBP) and adjust compression quality from within the modal.
+- **Live Size Estimation**: Instant, in-memory calculation of the final image size in bytes before applying.
+- **Streamlined Workflow**: Clicking "Save" processes the resize and instantly triggers a download. Crop is now the default tool upon upload.
+
 ## [1.4.0] - 2026-06-07
 ### Added
 - **Brutalist UI/UX**: Completely redesigned the interface using a strict Brutalist design system with high-contrast elements.

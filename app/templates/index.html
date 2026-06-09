@@ -31,12 +31,10 @@
 
             <!-- Toolbar (only shown in edit mode) -->
             <div id="toolbar-icons" class="toolbar-icons" style="display: none;">
-                <input type="radio" id="res" name="mode" value="resolution" checked onchange="toggleInputs()">
-                <label for="res" class="tool-btn" title="Resize">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
-                </label>
+                <!-- Hidden radio for resolution mode used when saving from modal -->
+                <input type="radio" name="mode" value="resolution" style="display: none;">
 
-                <input type="radio" id="crop" name="mode" value="crop" onchange="toggleInputs()">
+                <input type="radio" id="crop" name="mode" value="crop" checked onchange="toggleInputs()">
                 <label for="crop" class="tool-btn" title="Crop">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"></path></svg>
                 </label>
@@ -100,6 +98,9 @@
             <div id="step-2-edit" class="preview-container" style="display: none;">
                 <div class="canvas-header">
                     <div class="history-controls">
+                        <button type="button" class="icon-btn" onclick="openResizeModal()" title="Resize">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
+                        </button>
                         <button type="button" class="icon-btn" onclick="undoStep()" id="undo-btn" disabled title="Undo">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
                         </button>
@@ -129,14 +130,7 @@
             <div class="settings-content">
                 <div id="inputs-frame">
                     <!-- The inputs exactly as they were, but styled better -->
-                    <div id="resolution-inputs">
-                        <label class="setting-label">Dimensions</label>
-                        <div class="input-row">
-                            <input type="number" name="width" placeholder="Width" min="1" oninput="livePreview()" onchange="applyEdit()">
-                            <span class="x-divider">×</span>
-                            <input type="number" name="height" placeholder="Height" min="1" oninput="livePreview()" onchange="applyEdit()">
-                        </div>
-                    </div>
+                    <!-- Removed resolution inputs to use modal -->
 
                     <div id="crop-inputs" style="display:none;">
                         <label class="setting-label">Aspect Ratio</label>
@@ -250,6 +244,85 @@
                 </button>
             </div>
         </aside>
+
+        <!-- Resize Modal -->
+        <div id="resize-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Resize</h2>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="resize-type-toggle">
+                        <label class="radio-label">
+                            <input type="radio" name="resize_type" value="pixels" checked onchange="toggleResizeType()">
+                            <span class="radio-custom"></span> Pixels
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="resize_type" value="percentage" onchange="toggleResizeType()">
+                            <span class="radio-custom"></span> Percentage
+                        </label>
+                    </div>
+
+                    <div id="resize-pixels-inputs" class="resize-inputs-grid">
+                        <div class="input-group">
+                            <label>Width (px)</label>
+                            <input type="number" name="width" id="resize_width" oninput="handleResizeInput('width')">
+                        </div>
+                        <div class="aspect-ratio-lock">
+                            <button type="button" id="aspect-lock-btn" class="icon-btn locked" onclick="toggleAspectLock()" title="Lock/Unlock Aspect Ratio">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="lock-icon-svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                            </button>
+                        </div>
+                        <div class="input-group">
+                            <label>Height (px)</label>
+                            <input type="number" name="height" id="resize_height" oninput="handleResizeInput('height')">
+                        </div>
+                    </div>
+
+                    <div id="resize-percentage-inputs" class="resize-inputs-grid" style="display: none;">
+                        <div class="input-group">
+                            <label>Percentage (%)</label>
+                            <input type="number" name="percentage" id="resize_percentage" value="100" min="1" max="1000" oninput="handleResizeInput('percentage')">
+                        </div>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <label>Quality: <span id="resize-quality-val">100</span>% <span id="resize-quality-lbl">(High)</span></label>
+                            </div>
+                            <input type="range" name="quality" id="resize_quality" min="10" max="100" value="100" oninput="handleQualityInput()" onchange="triggerEstimation()">
+                        </div>
+                        <div class="input-group">
+                            <label>File type</label>
+                            <select name="resize_save_format" id="resize_save_format" onchange="triggerEstimation()">
+                                <option value="AUTO">Auto</option>
+                                <option value="PNG">PNG</option>
+                                <option value="JPEG">JPEG</option>
+                                <option value="WEBP">WEBP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="resize-info-panel">
+                        <div class="info-row">
+                            <span class="info-label">Current:</span>
+                            <span class="info-value" id="current-info-val">...</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">New:</span>
+                            <span class="info-value" id="new-info-val">...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeResizeModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="downloadFromResize()" title="Apply changes and download">Save</button>
+                </div>
+            </div>
+        </div>
     </form>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
