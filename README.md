@@ -16,12 +16,11 @@ A browser-based image processing tool created with Flask. It allows you to:
 - **RESTful API**: Exposes a `/api/v1/process` endpoint for developers to process images programmatically.
 - **Processing Modes**:
     1. **Resize**: Interactive modal with pixel or percentage scaling, aspect ratio locking, and live file-size estimation before downloading.
-    2. **Crop**: Interactive visual cropping with preset aspect ratios.
-    3. **Rotate**: Rotation by specified degrees.
-    4. **Filters**: Apply Grayscale, Sepia, Blue Tone, or Warm Tone.
-    5. **Adjustments**: Fine-tune Brightness, Contrast, Saturation, and Sharpness.
-    6. **Watermark**: Protect images with text (opacity/color) or image logos.
-    7. **Remove Background**: AI-powered background removal.
+    2. **Crop & Rotate**: Unified interactive visual tool with preset aspect ratios, custom angle slider, and flip controls.
+    3. **Filters**: Apply Grayscale, Sepia, Blue Tone, or Warm Tone.
+    4. **Adjustments**: Fine-tune Brightness, Contrast, Saturation, and Sharpness.
+    5. **Watermark**: Protect images with text (opacity/color) or image logos.
+    6. **Remove Background**: AI-powered background removal.
 - **Format Conversion**: Choose output format or let the app automatically decide to preserve transparency.
 - **Security & Performance**: Rate limiting prevents abuse, while local caching ensures lightning-fast undo/redo.
 - **Modular Design**: Scalable Flask application structure using blueprints and background threads.

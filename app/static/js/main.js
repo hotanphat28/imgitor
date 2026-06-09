@@ -26,6 +26,9 @@ function commitCropThenSwitch(newMode) {
     formData.set('crop_y', cropData.y);
     formData.set('crop_w', cropData.width);
     formData.set('crop_h', cropData.height);
+    formData.set('crop_rotate', cropData.rotate);
+    formData.set('crop_scaleX', cropData.scaleX);
+    formData.set('crop_scaleY', cropData.scaleY);
     
     document.getElementById('loader-overlay').style.display = 'flex';
     
@@ -57,7 +60,7 @@ function executeModeSwitch(newMode) {
 
 	document.getElementById('filter-inputs').style.display = (newMode === 'filter') ? 'block' : 'none';
 	document.getElementById('crop-inputs').style.display = (newMode === 'crop') ? 'block' : 'none';
-	document.getElementById('rotate-inputs').style.display = (newMode === 'rotate') ? 'block' : 'none';
+	document.getElementById('crop-bottom-toolbar').style.display = (newMode === 'crop') ? 'flex' : 'none';
 	document.getElementById('adjust-inputs').style.display = (newMode === 'adjust') ? 'block' : 'none';
 	document.getElementById('watermark-inputs').style.display = (newMode === 'watermark') ? 'block' : 'none';
 
@@ -125,7 +128,7 @@ function initCropper() {
         cropper = new Cropper(liveImg, {
             viewMode: 1,
             aspectRatio: NaN,
-            autoCropArea: 0.8,
+            autoCropArea: 1, // Changed to 1 to cover the whole image by default
             cropend: function() {
                 cropModified = true;
             }
@@ -140,12 +143,71 @@ function destroyCropper() {
     }
 }
 
-function setCropAspectRatio(ratio) {
+function setCropAspectRatio(ratio, label) {
     if (cropper) {
-        cropper.setAspectRatio(parseFloat(ratio));
+        if (ratio === 'original') {
+            const data = cropper.getImageData();
+            cropper.setAspectRatio(data.naturalWidth / data.naturalHeight);
+        } else {
+            cropper.setAspectRatio(parseFloat(ratio));
+        }
+        
+        if (ratio === 'original' || isNaN(parseFloat(ratio))) {
+            cropper.setCropBoxData({ left: 0, top: 0, width: 9999, height: 9999 });
+        }
+        
+        cropModified = true;
+        
+        if (label) {
+            document.getElementById('current-aspect').innerText = label;
+            document.getElementById('aspect-dropdown').style.display = 'none';
+        }
+    }
+}
+
+function setCropAngle(value) {
+    if (cropper) {
+        cropper.rotateTo(Number(value));
+        document.getElementById('angle-val').innerHTML = value + '&deg;';
         cropModified = true;
     }
 }
+
+function rotateCrop(degrees) {
+    if (cropper) {
+        cropper.rotate(degrees);
+        const data = cropper.getData();
+        document.getElementById('crop-angle').value = data.rotate;
+        document.getElementById('angle-val').innerHTML = data.rotate + '&deg;';
+        cropModified = true;
+    }
+}
+
+function flipCrop(axis) {
+    if (cropper) {
+        const data = cropper.getData();
+        if (axis === 'horizontal') {
+            cropper.scaleX(data.scaleX === -1 ? 1 : -1);
+        } else {
+            cropper.scaleY(data.scaleY === -1 ? 1 : -1);
+        }
+        cropModified = true;
+    }
+}
+
+function toggleAspectDropdown() {
+    const dropdown = document.getElementById('aspect-dropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'flex' : 'none';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const selector = document.querySelector('.aspect-ratio-selector');
+    const dropdown = document.getElementById('aspect-dropdown');
+    if (selector && dropdown && !selector.contains(event.target)) {
+        dropdown.style.display = 'none';
+    }
+});
 
 function handleFileUpload(input) {
 	const file = input.files[0];
@@ -167,6 +229,9 @@ function submitForm() {
         formData.set('crop_y', data.y);
         formData.set('crop_w', data.width);
         formData.set('crop_h', data.height);
+        formData.set('crop_rotate', data.rotate);
+        formData.set('crop_scaleX', data.scaleX);
+        formData.set('crop_scaleY', data.scaleY);
     }
     
     formData.set('preview', 'true');

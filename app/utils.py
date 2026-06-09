@@ -92,6 +92,20 @@ def process_image_core(img, mode, params, wm_image_stream=None):
     elif mode == 'crop':
         x, y = int(float(params.get('crop_x', 0))), int(float(params.get('crop_y', 0)))
         w, h = int(float(params.get('crop_w', img.width))), int(float(params.get('crop_h', img.height)))
+        
+        rotate = float(params.get('crop_rotate', 0))
+        scaleX = float(params.get('crop_scaleX', 1))
+        scaleY = float(params.get('crop_scaleY', 1))
+        
+        from PIL import ImageOps
+        if scaleX == -1:
+            img = ImageOps.mirror(img)
+        if scaleY == -1:
+            img = ImageOps.flip(img)
+            
+        if rotate != 0:
+            img = img.rotate(-rotate, expand=True, resample=Image.Resampling.BICUBIC)
+            
         processed_img = crop_image(img, x, y, w, h)
 
     elif mode == 'rotate':
