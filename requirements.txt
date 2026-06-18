@@ -7,3 +7,4 @@ python-dotenv
 pytest
 Flask-Limiter
 Flask-Caching
+pytest-playwright

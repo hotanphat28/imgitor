@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.8.0] - 2026-06-18
+### Added
+- **Playwright E2E Testing**: Replaced the basic Flask API integration tests with a robust End-to-End UI testing framework using `pytest-playwright`.
+- **Live Server Testing**: The test suite now automatically spins up a background thread, allowing Playwright to upload files and interact with the frontend UI via a browser.
+
+### Changed
+- Consolidated `test_routes.py` backend integration scenarios into `test_e2e.py`.
 ## [1.7.0] - 2026-06-09
 ### Added
 - **Unified Transformation Tool**: Successfully merged the Crop and Rotate tools into a single, cohesive interface. Features a new floating bottom toolbar providing a custom angle slider, aspect ratio presets, and instant horizontal/vertical flip controls.
