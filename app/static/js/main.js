@@ -1,107 +1,529 @@
-let cropper = null;
-
-let currentMode = 'resolution';
-let cropModified = false;
-
-function toggleInputs() {
-    const modeEl = document.querySelector('input[name="mode"]:checked');
-    if (!modeEl) return;
-    const newMode = modeEl.value;
-
-    if (currentMode === 'crop' && newMode !== 'crop' && cropper && cropModified) {
-        commitCropThenSwitch(newMode);
-    } else {
-        executeModeSwitch(newMode);
+class StateManager {
+    constructor() {
+        this.sessionId = '';
+        this.currentStep = 0;
+        this.currentMode = 'resolution';
+        this.lastCommittedSrc = '';
+        this.originalImageSrc = '';
+        this.currentImageMeta = { width: 100, height: 100, size_bytes: 0, format: 'PNG' };
+        this.cropModified = false;
     }
 }
 
-function commitCropThenSwitch(newMode) {
-    const cropData = cropper.getData(true);
-    const form = document.getElementById('main-form');
-    const formData = new FormData(form);
-    
-    formData.set('action', 'edit');
-    formData.set('mode', 'crop');
-    formData.set('crop_x', cropData.x);
-    formData.set('crop_y', cropData.y);
-    formData.set('crop_w', cropData.width);
-    formData.set('crop_h', cropData.height);
-    formData.set('crop_rotate', cropData.rotate);
-    formData.set('crop_scaleX', cropData.scaleX);
-    formData.set('crop_scaleY', cropData.scaleY);
-    
-    document.getElementById('loader-overlay').style.display = 'flex';
-    
-    return fetch('/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('loader-overlay').style.display = 'none';
-        if (data.success) {
-            document.getElementById('current_step').value = data.current_step;
-            document.getElementById('preview-live').src = data.image;
-            updateUndoRedoButtons();
-            
-            cropModified = false;
-            executeModeSwitch(newMode);
+class ThemeManager {
+    constructor() {
+        this.isDark = localStorage.getItem('darkMode') === 'true';
+        this.init();
+    }
+
+    init() {
+        const checkbox = document.getElementById('theme-checkbox');
+        if (checkbox) checkbox.checked = this.isDark;
+        if (this.isDark) document.body.classList.add('dark-mode');
+    }
+
+    toggle(isDark) {
+        this.isDark = isDark;
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('darkMode', 'true');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('darkMode', 'false');
         }
-    })
-    .catch(error => {
-        console.error(error);
-        document.getElementById('loader-overlay').style.display = 'none';
-    });
+    }
 }
 
-function executeModeSwitch(newMode) {
-    if (window.lastCommittedSrc) {
-        const previewLive = document.getElementById('preview-live');
-        if (previewLive && previewLive.src !== window.lastCommittedSrc) {
-            previewLive.src = window.lastCommittedSrc;
+class CropTool {
+    constructor(stateManager) {
+        this.state = stateManager;
+        this.cropper = null;
+    }
+
+    init() {
+        const liveImg = document.getElementById('preview-live');
+        if (!this.cropper && liveImg.src) {
+            this.cropper = new Cropper(liveImg, {
+                viewMode: 1,
+                aspectRatio: NaN,
+                autoCropArea: 1,
+                cropend: () => {
+                    this.state.cropModified = true;
+                }
+            });
         }
     }
 
-    currentMode = newMode;
-    document.querySelector(`input[name="mode"][value="${newMode}"]`).checked = true;
-
-	document.getElementById('filter-inputs').style.display = (newMode === 'filter') ? 'block' : 'none';
-	document.getElementById('crop-inputs').style.display = (newMode === 'crop') ? 'block' : 'none';
-	document.getElementById('crop-bottom-toolbar').style.display = (newMode === 'crop') ? 'flex' : 'none';
-	document.getElementById('adjust-inputs').style.display = (newMode === 'adjust') ? 'block' : 'none';
-	document.getElementById('watermark-inputs').style.display = (newMode === 'watermark') ? 'block' : 'none';
-
-    if (newMode === 'remove_bg') {
-        applyEdit();
+    destroy() {
+        if (this.cropper) {
+            this.cropper.destroy();
+            this.cropper = null;
+        }
     }
 
-    if (newMode === 'crop') {
-        initCropper();
-    } else {
-        destroyCropper();
+    setAspectRatio(ratio, label) {
+        if (!this.cropper) return;
+        if (ratio === 'original') {
+            const data = this.cropper.getImageData();
+            this.cropper.setAspectRatio(data.naturalWidth / data.naturalHeight);
+        } else {
+            this.cropper.setAspectRatio(parseFloat(ratio));
+        }
+        
+        if (ratio === 'original' || isNaN(parseFloat(ratio))) {
+            this.cropper.setCropBoxData({ left: 0, top: 0, width: 9999, height: 9999 });
+        }
+        
+        this.state.cropModified = true;
+        
+        if (label) {
+            document.getElementById('current-aspect').innerText = label;
+            document.getElementById('aspect-dropdown').style.display = 'none';
+        }
     }
 
-    if (newMode === 'filter') {
-        const filterInput = document.getElementById('filter_type');
-        if (filterInput) filterInput.value = 'none';
+    setAngle(value) {
+        if (this.cropper) {
+            this.cropper.rotateTo(Number(value));
+            document.getElementById('angle-val').innerHTML = value + '&deg;';
+            this.state.cropModified = true;
+        }
+    }
+
+    rotate(degrees) {
+        if (this.cropper) {
+            this.cropper.rotate(degrees);
+            const data = this.cropper.getData();
+            document.getElementById('crop-angle').value = data.rotate;
+            document.getElementById('angle-val').innerHTML = data.rotate + '&deg;';
+            this.state.cropModified = true;
+        }
+    }
+
+    flip(axis) {
+        if (this.cropper) {
+            const data = this.cropper.getData();
+            if (axis === 'horizontal') {
+                this.cropper.scaleX(data.scaleX === -1 ? 1 : -1);
+            } else {
+                this.cropper.scaleY(data.scaleY === -1 ? 1 : -1);
+            }
+            this.state.cropModified = true;
+        }
+    }
+
+    getData() {
+        return this.cropper ? this.cropper.getData(true) : null;
+    }
+
+    replace(src) {
+        if (this.cropper) this.cropper.replace(src);
+    }
+}
+
+class ResizeModal {
+    constructor(stateManager) {
+        this.state = stateManager;
+        this.aspectLocked = true;
+        this.originalAspectRatio = 1;
+    }
+
+    formatBytes(bytes) {
+        if(bytes == null || isNaN(bytes)) return '0 B';
+        if(bytes < 1024) return bytes + ' B';
+        else if(bytes < 1048576) return (bytes / 1024).toFixed(0) + ' KB';
+        else return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    open() {
+        document.getElementById('resize-modal').style.display = 'flex';
+        const meta = this.state.currentImageMeta;
+        
+        document.getElementById('resize_width').value = meta.width;
+        document.getElementById('resize_height').value = meta.height;
+        document.getElementById('resize_percentage').value = 100;
+        this.originalAspectRatio = meta.width / meta.height;
+        
+        document.querySelector('input[name="resize_type"][value="pixels"]').checked = true;
+        this.toggleType();
+        
+        document.getElementById('resize_quality').value = 100;
+        this.handleQuality();
+        document.getElementById('resize_save_format').value = 'AUTO';
+        
+        const currentStr = `${meta.width} x ${meta.height} pixels &nbsp;&nbsp;&nbsp; ${this.formatBytes(meta.size_bytes)} &nbsp;&nbsp;&nbsp; ${meta.format}`;
+        document.getElementById('current-info-val').innerHTML = currentStr;
+        document.getElementById('new-info-val').innerHTML = currentStr;
+    }
+
+    close() {
+        document.getElementById('resize-modal').style.display = 'none';
+    }
+
+    toggleType() {
+        const type = document.querySelector('input[name="resize_type"]:checked').value;
+        document.getElementById('resize-pixels-inputs').style.display = (type === 'pixels') ? 'flex' : 'none';
+        document.getElementById('resize-percentage-inputs').style.display = (type === 'percentage') ? 'flex' : 'none';
+        window.triggerEstimation();
+    }
+
+    toggleLock() {
+        this.aspectLocked = !this.aspectLocked;
+        const btn = document.getElementById('aspect-lock-btn');
+        if (this.aspectLocked) {
+            btn.classList.add('locked');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="lock-icon-svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
+            const w = parseInt(document.getElementById('resize_width').value) || 1;
+            document.getElementById('resize_height').value = Math.max(1, Math.round(w / this.originalAspectRatio));
+            window.triggerEstimation();
+        } else {
+            btn.classList.remove('locked');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"></path><line x1="8" y1="12" x2="16" y2="12"></line></svg>';
+        }
+    }
+
+    handleInput(source) {
+        if (source === 'width' && this.aspectLocked) {
+            const w = parseInt(document.getElementById('resize_width').value) || 1;
+            document.getElementById('resize_height').value = Math.max(1, Math.round(w / this.originalAspectRatio));
+        } else if (source === 'height' && this.aspectLocked) {
+            const h = parseInt(document.getElementById('resize_height').value) || 1;
+            document.getElementById('resize_width').value = Math.max(1, Math.round(h * this.originalAspectRatio));
+        }
+        window.triggerEstimation();
+    }
+
+    handleQuality() {
+        const q = document.getElementById('resize_quality').value;
+        document.getElementById('resize-quality-val').innerText = q;
+        let lbl = q >= 90 ? '(High)' : q >= 60 ? '(Medium)' : '(Low)';
+        document.getElementById('resize-quality-lbl').innerText = lbl;
+    }
+}
+
+class ImgitorApp {
+    constructor() {
+        this.state = new StateManager();
+        this.theme = new ThemeManager();
+        this.cropTool = new CropTool(this.state);
+        this.resizeModal = new ResizeModal(this.state);
+        
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        document.addEventListener('DOMContentLoaded', () => this.initUI());
+        
+        // Mobile sidebar drawer close
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'mobile-overlay') {
+                this.closeMobileDrawer();
+            }
+        });
+
+        // Close aspect dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            const selector = document.querySelector('.aspect-ratio-selector');
+            const dropdown = document.getElementById('aspect-dropdown');
+            if (selector && dropdown && !selector.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+
+    initUI() {
+        const uploadArea = document.querySelector('.upload-area');
+        const fileInput = document.getElementById('image');
+
+        if (uploadArea && fileInput) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+            });
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.add('drag-active'), false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('drag-active'), false);
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    fileInput.files = files;
+                    this.handleFileUpload(fileInput);
+                }
+            }, false);
+        }
+
+        const liveImg = document.getElementById('preview-live');
+        if (liveImg) {
+            liveImg.addEventListener('mousedown', () => {
+                if (this.state.originalImageSrc && liveImg.src !== this.state.originalImageSrc) {
+                    liveImg.dataset.currentSrc = liveImg.src;
+                    liveImg.src = this.state.originalImageSrc;
+                }
+            });
+            const restoreImage = () => {
+                if (liveImg.dataset.currentSrc && liveImg.src === this.state.originalImageSrc) {
+                    liveImg.src = liveImg.dataset.currentSrc;
+                }
+            };
+            liveImg.addEventListener('mouseup', restoreImage);
+            liveImg.addEventListener('mouseleave', restoreImage);
+        }
+    }
+
+    openMobileDrawer() {
+        if (window.innerWidth <= 768) {
+            document.getElementById('settings-sidebar').classList.add('active');
+            document.getElementById('mobile-overlay').classList.add('active');
+        }
+    }
+
+    closeMobileDrawer() {
+        document.getElementById('settings-sidebar').classList.remove('active');
+        document.getElementById('mobile-overlay').classList.remove('active');
+    }
+
+    toggleInputs() {
+        const modeEl = document.querySelector('input[name="mode"]:checked');
+        if (!modeEl) return;
+        const newMode = modeEl.value;
+
+        if (this.state.currentMode === 'crop' && newMode !== 'crop' && this.cropTool.cropper && this.state.cropModified) {
+            this.commitCropThenSwitch(newMode);
+        } else {
+            this.executeModeSwitch(newMode);
+        }
+        
+        // Open drawer on mobile when tool is selected, except for crop
+        if (newMode === 'crop') {
+            this.closeMobileDrawer();
+        } else {
+            this.openMobileDrawer();
+        }
+    }
+
+    commitCropThenSwitch(newMode) {
+        const cropData = this.cropTool.getData();
+        const form = document.getElementById('main-form');
+        const formData = new FormData(form);
+        
+        formData.set('action', 'edit');
+        formData.set('mode', 'crop');
+        formData.set('crop_x', cropData.x);
+        formData.set('crop_y', cropData.y);
+        formData.set('crop_w', cropData.width);
+        formData.set('crop_h', cropData.height);
+        formData.set('crop_rotate', cropData.rotate);
+        formData.set('crop_scaleX', cropData.scaleX);
+        formData.set('crop_scaleY', cropData.scaleY);
+        
+        this.showLoader();
+        
+        return fetch('/upload', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            this.hideLoader();
+            if (data.success) {
+                document.getElementById('current_step').value = data.current_step;
+                document.getElementById('preview-live').src = data.image;
+                this.state.currentStep = data.current_step;
+                this.updateUndoRedo();
+                this.state.cropModified = false;
+                this.executeModeSwitch(newMode);
+            }
+        })
+        .catch(err => { console.error(err); this.hideLoader(); });
+    }
+
+    executeModeSwitch(newMode) {
+        if (this.state.lastCommittedSrc) {
+            const previewLive = document.getElementById('preview-live');
+            if (previewLive && previewLive.src !== this.state.lastCommittedSrc) {
+                previewLive.src = this.state.lastCommittedSrc;
+            }
+        }
+
+        this.state.currentMode = newMode;
+        document.querySelector(`input[name="mode"][value="${newMode}"]`).checked = true;
+
+        document.getElementById('filter-inputs').style.display = (newMode === 'filter') ? 'block' : 'none';
+        document.getElementById('crop-inputs').style.display = (newMode === 'crop') ? 'block' : 'none';
+        document.getElementById('crop-bottom-toolbar').style.display = (newMode === 'crop') ? 'flex' : 'none';
+        document.getElementById('adjust-inputs').style.display = (newMode === 'adjust') ? 'block' : 'none';
+        document.getElementById('watermark-inputs').style.display = (newMode === 'watermark') ? 'block' : 'none';
+
+        if (newMode === 'crop') {
+            this.cropTool.init();
+        } else {
+            this.cropTool.destroy();
+        }
+
+        if (newMode === 'filter') {
+            document.getElementById('filter_type').value = 'none';
+            document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-thumb[onclick*="none"]')?.classList.add('active');
+            window.livePreview();
+        }
+    }
+
+    selectFilter(filterName, btnElement) {
+        document.getElementById('filter_type').value = filterName;
         document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
-        const normalBtn = document.querySelector('.filter-thumb[onclick*="none"]');
-        if (normalBtn) normalBtn.classList.add('active');
-        livePreview();
-    } else if (newMode === 'remove_bg') {
-        livePreview();
+        if (btnElement) btnElement.classList.add('active');
+        window.livePreview();
     }
+
+    handleFileUpload(input) {
+        const file = input.files[0];
+        if (file) {
+            document.getElementById('form_action').value = 'init';
+            this.submitForm();
+        }
+    }
+
+    submitForm() {
+        const form = document.getElementById('main-form');
+        const formData = new FormData(form);
+        const action = document.getElementById('form_action').value;
+        const modeEl = document.querySelector('input[name="mode"]:checked');
+        const mode = modeEl ? modeEl.value : 'resolution';
+
+        if (action === 'edit' && mode === 'crop' && this.cropTool.cropper) {
+            const data = this.cropTool.getData();
+            formData.set('crop_x', data.x); formData.set('crop_y', data.y);
+            formData.set('crop_w', data.width); formData.set('crop_h', data.height);
+            formData.set('crop_rotate', data.rotate);
+            formData.set('crop_scaleX', data.scaleX); formData.set('crop_scaleY', data.scaleY);
+        }
+        
+        formData.set('preview', 'true');
+        this.showLoader();
+
+        fetch('/upload', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('session_id').value = data.session_id;
+                document.getElementById('current_step').value = data.current_step;
+                document.getElementById('preview-live').src = data.image;
+                
+                this.state.sessionId = data.session_id;
+                this.state.currentStep = data.current_step;
+                this.state.lastCommittedSrc = data.image;
+                this.state.currentImageMeta = { width: data.width, height: data.height, size_bytes: data.size_bytes, format: data.format };
+                
+                document.getElementById('step-1-upload').style.display = 'none';
+                document.getElementById('step-2-edit').style.display = 'flex';
+                document.getElementById('settings-sidebar').style.display = 'flex';
+                document.getElementById('toolbar-icons').style.display = 'flex';
+                document.getElementById('download-btn').style.display = 'inline-flex';
+                
+                const navLinks = document.querySelector('.nav-links');
+                if (navLinks) navLinks.style.display = 'none';
+
+                this.updateUndoRedo();
+                
+                if (['init', 'undo', 'redo'].includes(action)) document.getElementById('form_action').value = 'edit';
+                if (action === 'init') {
+                    this.state.originalImageSrc = data.image;
+                    this.toggleInputs();
+                }
+                
+                this.cropTool.replace(data.image);
+            } else {
+                alert('Error processing image: ' + (data.error || 'Unknown'));
+            }
+        })
+        .catch(err => { console.error(err); alert('An error occurred'); })
+        .finally(() => this.hideLoader());
+    }
+
+    applyEdit() { document.getElementById('form_action').value = 'edit'; this.submitForm(); }
+    undoStep() { document.getElementById('form_action').value = 'undo'; this.submitForm(); }
+    redoStep() { document.getElementById('form_action').value = 'redo'; this.submitForm(); }
+    resetAll() { document.getElementById('form_action').value = 'reset'; this.submitForm(); }
+
+    updateUndoRedo() {
+        const step = parseInt(document.getElementById('current_step').value);
+        document.getElementById('undo-btn').disabled = (step <= 0);
+        document.getElementById('redo-btn').disabled = false;
+    }
+
+    removeBackground() {
+        if (this.state.currentMode === 'crop' && this.cropTool.cropper && this.state.cropModified) {
+            this.commitCropThenSwitch(this.state.currentMode).then(() => {
+                this._doRembgSubmit();
+            });
+        } else {
+            this._doRembgSubmit();
+        }
+    }
+
+    _doRembgSubmit() {
+        const form = document.getElementById('main-form');
+        form.querySelectorAll('input[name="mode"]').forEach(r => r.checked = false);
+        
+        let hiddenMode = document.getElementById('hidden-rembg-mode');
+        if (!hiddenMode) {
+            hiddenMode = document.createElement('input');
+            hiddenMode.type = 'hidden';
+            hiddenMode.name = 'mode';
+            hiddenMode.id = 'hidden-rembg-mode';
+            hiddenMode.value = 'remove_bg';
+            form.appendChild(hiddenMode);
+        }
+        
+        document.getElementById('form_action').value = 'edit';
+        this.submitForm();
+        
+        setTimeout(() => {
+            hiddenMode.remove();
+            const currentRadio = document.querySelector(`input[name="mode"][value="${this.state.currentMode}"]`);
+            if (currentRadio) currentRadio.checked = true;
+        }, 100);
+    }
+
+    downloadImage() {
+        if (this.state.currentMode === 'crop' && this.cropTool.cropper && this.state.cropModified) {
+            this.commitCropThenSwitch(this.state.currentMode).then(() => {
+                document.getElementById('form_action').value = 'download';
+                document.getElementById('main-form').submit(); 
+            });
+            return;
+        }
+        document.getElementById('form_action').value = 'download';
+        document.getElementById('main-form').submit(); 
+    }
+
+    startOver() {
+        document.getElementById('main-form').reset();
+        this.cropTool.destroy();
+        document.getElementById('preview-live').src = '';
+        document.getElementById('step-2-edit').style.display = 'none';
+        document.getElementById('step-1-upload').style.display = 'flex';
+        document.getElementById('download-btn').style.display = 'none';
+        document.getElementById('settings-sidebar').style.display = 'none';
+        document.getElementById('toolbar-icons').style.display = 'none';
+        
+        const navLinks = document.querySelector('.nav-links');
+        if (navLinks) navLinks.style.display = 'flex';
+        
+        document.getElementById('session_id').value = '';
+        document.getElementById('current_step').value = '0';
+        this.state.currentStep = 0;
+        this.closeMobileDrawer();
+        this.toggleInputs();
+    }
+
+    showLoader() { document.getElementById('loader-overlay').style.display = 'flex'; }
+    hideLoader() { document.getElementById('loader-overlay').style.display = 'none'; }
 }
 
-function selectFilter(filterName, btnElement) {
-    document.getElementById('filter_type').value = filterName;
-    document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
-    if (btnElement) {
-        btnElement.classList.add('active');
-    }
-    livePreview();
-}
+// Global initialization
+const app = new ImgitorApp();
 
+// Debounce helper
 function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -110,7 +532,83 @@ function debounce(func, wait) {
     };
 }
 
-const livePreview = debounce(function() {
+// Bind global functions to app methods so existing HTML handlers keep working
+window.toggleInputs = () => app.toggleInputs();
+window.selectFilter = (name, el) => app.selectFilter(name, el);
+window.handleFileUpload = (el) => app.handleFileUpload(el);
+window.applyEdit = () => app.applyEdit();
+window.undoStep = () => app.undoStep();
+window.redoStep = () => app.redoStep();
+window.resetAll = () => app.resetAll();
+window.downloadImage = () => app.downloadImage();
+window.startOver = () => app.startOver();
+window.removeBackground = () => app.removeBackground();
+window.toggleTheme = (isDark) => app.theme.toggle(isDark);
+window.openResizeModal = () => app.resizeModal.open();
+window.closeResizeModal = () => app.resizeModal.close();
+window.toggleResizeType = () => app.resizeModal.toggleType();
+window.toggleAspectLock = () => app.resizeModal.toggleLock();
+window.handleResizeInput = (src) => app.resizeModal.handleInput(src);
+window.handleQualityInput = () => app.resizeModal.handleQuality();
+window.setCropAngle = (v) => app.cropTool.setAngle(v);
+window.rotateCrop = (d) => app.cropTool.rotate(d);
+window.flipCrop = (a) => app.cropTool.flip(a);
+window.setCropAspectRatio = (r, l) => app.cropTool.setAspectRatio(r, l);
+window.toggleAspectDropdown = () => {
+    const d = document.getElementById('aspect-dropdown');
+    d.style.display = d.style.display === 'none' ? 'flex' : 'none';
+};
+window.closeMobileDrawer = () => app.closeMobileDrawer();
+
+window.saveResize = () => {
+    const form = document.getElementById('main-form');
+    form.querySelectorAll('input[name="mode"]').forEach(r => r.checked = false);
+    let modeInput = form.querySelector('input[name="mode"][value="resolution"]');
+    if (modeInput) modeInput.checked = true;
+    
+    document.getElementById('save_format').value = document.getElementById('resize_save_format').value;
+    app.applyEdit();
+    app.resizeModal.close();
+    
+    setTimeout(() => {
+        const cropRadio = document.getElementById('crop');
+        if (cropRadio) {
+            cropRadio.checked = true;
+            app.executeModeSwitch('crop');
+        }
+    }, 100);
+};
+
+window.downloadFromResize = () => {
+    const form = document.getElementById('main-form');
+    form.querySelectorAll('input[name="mode"]').forEach(r => r.checked = false);
+    let modeInput = form.querySelector('input[name="mode"][value="resolution"]');
+    if (modeInput) modeInput.checked = true;
+    
+    document.getElementById('save_format').value = document.getElementById('resize_save_format').value;
+    document.getElementById('form_action').value = 'edit';
+    
+    app.showLoader();
+    fetch('/upload', { method: 'POST', body: new FormData(form) })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('current_step').value = data.current_step;
+            document.getElementById('preview-live').src = data.image;
+            app.resizeModal.close();
+            setTimeout(() => { app.downloadImage(); app.hideLoader(); }, 100);
+            setTimeout(() => {
+                const cropRadio = document.getElementById('crop');
+                if (cropRadio) { cropRadio.checked = true; app.executeModeSwitch('crop'); }
+            }, 200);
+        } else {
+            alert('Error applying resize before download');
+            app.hideLoader();
+        }
+    }).catch(err => { console.error(err); app.hideLoader(); });
+};
+
+window.livePreview = debounce(function() {
     const actionEl = document.getElementById('form_action');
     if (!actionEl) return;
     const actionVal = actionEl.value;
@@ -120,7 +618,7 @@ const livePreview = debounce(function() {
     if (!modeEl) return;
     const mode = modeEl.value;
 
-    if (mode === 'crop') return; // CropperJS handles its own visual preview
+    if (mode === 'crop') return;
 
     const form = document.getElementById('main-form');
     if(!form) return;
@@ -128,428 +626,24 @@ const livePreview = debounce(function() {
     const formData = new FormData(form);
     formData.set('action', 'preview_only');
 
-    // Show a mini loader or just let it update smoothly
-    fetch('/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
+    fetch('/upload', { method: 'POST', body: formData })
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
             const previewLive = document.getElementById('preview-live');
-            if (previewLive) {
-                previewLive.src = data.image;
-            }
+            if (previewLive) previewLive.src = data.image;
         }
-    })
-    .catch(error => console.error('Preview error:', error));
+    }).catch(err => console.error('Preview error:', err));
 }, 50);
 
-function initCropper() {
-    const liveImg = document.getElementById('preview-live');
-    if (!cropper && liveImg.src) {
-        cropper = new Cropper(liveImg, {
-            viewMode: 1,
-            aspectRatio: NaN,
-            autoCropArea: 1, // Changed to 1 to cover the whole image by default
-            cropend: function() {
-                cropModified = true;
-            }
-        });
-    }
-}
-
-function destroyCropper() {
-    if (cropper) {
-        cropper.destroy();
-        cropper = null;
-    }
-}
-
-function setCropAspectRatio(ratio, label) {
-    if (cropper) {
-        if (ratio === 'original') {
-            const data = cropper.getImageData();
-            cropper.setAspectRatio(data.naturalWidth / data.naturalHeight);
-        } else {
-            cropper.setAspectRatio(parseFloat(ratio));
-        }
-        
-        if (ratio === 'original' || isNaN(parseFloat(ratio))) {
-            cropper.setCropBoxData({ left: 0, top: 0, width: 9999, height: 9999 });
-        }
-        
-        cropModified = true;
-        
-        if (label) {
-            document.getElementById('current-aspect').innerText = label;
-            document.getElementById('aspect-dropdown').style.display = 'none';
-        }
-    }
-}
-
-function setCropAngle(value) {
-    if (cropper) {
-        cropper.rotateTo(Number(value));
-        document.getElementById('angle-val').innerHTML = value + '&deg;';
-        cropModified = true;
-    }
-}
-
-function rotateCrop(degrees) {
-    if (cropper) {
-        cropper.rotate(degrees);
-        const data = cropper.getData();
-        document.getElementById('crop-angle').value = data.rotate;
-        document.getElementById('angle-val').innerHTML = data.rotate + '&deg;';
-        cropModified = true;
-    }
-}
-
-function flipCrop(axis) {
-    if (cropper) {
-        const data = cropper.getData();
-        if (axis === 'horizontal') {
-            cropper.scaleX(data.scaleX === -1 ? 1 : -1);
-        } else {
-            cropper.scaleY(data.scaleY === -1 ? 1 : -1);
-        }
-        cropModified = true;
-    }
-}
-
-function toggleAspectDropdown() {
-    const dropdown = document.getElementById('aspect-dropdown');
-    dropdown.style.display = dropdown.style.display === 'none' ? 'flex' : 'none';
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(event) {
-    const selector = document.querySelector('.aspect-ratio-selector');
-    const dropdown = document.getElementById('aspect-dropdown');
-    if (selector && dropdown && !selector.contains(event.target)) {
-        dropdown.style.display = 'none';
-    }
-});
-
-function handleFileUpload(input) {
-	const file = input.files[0];
-	if (file) {
-        document.getElementById('form_action').value = 'init';
-        submitForm();
-	}
-}
-
-function submitForm() {
-    const form = document.getElementById('main-form');
-    const formData = new FormData(form);
-    const action = document.getElementById('form_action').value;
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-
-    if (action === 'edit' && mode === 'crop' && cropper) {
-        const data = cropper.getData(true);
-        formData.set('crop_x', data.x);
-        formData.set('crop_y', data.y);
-        formData.set('crop_w', data.width);
-        formData.set('crop_h', data.height);
-        formData.set('crop_rotate', data.rotate);
-        formData.set('crop_scaleX', data.scaleX);
-        formData.set('crop_scaleY', data.scaleY);
-    }
-    
-    formData.set('preview', 'true');
-
-    const loaderOverlay = document.getElementById('loader-overlay');
-	if (loaderOverlay) loaderOverlay.style.display = 'flex';
-
-    fetch('/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('session_id').value = data.session_id;
-            document.getElementById('current_step').value = data.current_step;
-            
-            document.getElementById('preview-live').src = data.image;
-            window.lastCommittedSrc = data.image;
-
-            window.currentImageMeta = {
-                width: data.width,
-                height: data.height,
-                size_bytes: data.size_bytes,
-                format: data.format
-            };
-            
-            // Switch steps if just uploaded
-            document.getElementById('step-1-upload').style.display = 'none';
-            document.getElementById('step-2-edit').style.display = 'flex';
-            document.getElementById('settings-sidebar').style.display = 'flex';
-            document.getElementById('toolbar-icons').style.display = 'flex';
-            document.getElementById('download-btn').style.display = 'inline-flex';
-            
-            const navLinks = document.querySelector('.nav-links');
-            if (navLinks) navLinks.style.display = 'none'; // Hide Single/Batch options
-
-            updateUndoRedoButtons();
-            
-            if (action === 'init' || action === 'undo' || action === 'redo') {
-                document.getElementById('form_action').value = 'edit';
-            }
-
-            if (action === 'init') {
-                window.originalImageSrc = data.image;
-                // Initialize the default tool (e.g., crop) now that the image is visible
-                toggleInputs();
-            }
-            
-            if (cropper) {
-                cropper.replace(data.image);
-            }
-        } else {
-            alert('Error processing image');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred');
-    })
-    .finally(() => {
-        if (loaderOverlay) loaderOverlay.style.display = 'none';
-    });
-}
-
-function applyEdit() {
-    document.getElementById('form_action').value = 'edit';
-    submitForm();
-}
-
-function undoStep() {
-    document.getElementById('form_action').value = 'undo';
-    submitForm();
-}
-
-function redoStep() {
-    document.getElementById('form_action').value = 'redo';
-    submitForm();
-}
-
-function updateUndoRedoButtons() {
-    const step = parseInt(document.getElementById('current_step').value);
-    document.getElementById('undo-btn').disabled = (step <= 0);
-    document.getElementById('redo-btn').disabled = false; 
-}
-
-function resetAll() {
-    document.getElementById('form_action').value = 'reset';
-    submitForm();
-}
-
-function downloadImage() {
-    if (currentMode === 'crop' && cropper && cropModified) {
-        commitCropThenSwitch(currentMode).then(() => {
-            document.getElementById('form_action').value = 'download';
-            document.getElementById('main-form').submit(); 
-        });
-        return;
-    }
-    
-    document.getElementById('form_action').value = 'download';
-    document.getElementById('main-form').submit(); 
-}
-
-function startOver() {
-	document.getElementById('main-form').reset();
-    destroyCropper();
-
-	document.getElementById('preview-live').src = '';
-
-	document.getElementById('step-2-edit').style.display = 'none';
-	document.getElementById('step-1-upload').style.display = 'flex';
-	document.getElementById('download-btn').style.display = 'none';
-    document.getElementById('settings-sidebar').style.display = 'none';
-    document.getElementById('toolbar-icons').style.display = 'none';
-    
-    const navLinks = document.querySelector('.nav-links');
-    if (navLinks) navLinks.style.display = 'flex';
-    
-    document.getElementById('session_id').value = '';
-    document.getElementById('current_step').value = '0';
-
-	toggleInputs();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-	const uploadArea = document.querySelector('.upload-area');
-	const fileInput = document.getElementById('image');
-
-	if (uploadArea && fileInput) {
-		['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-			uploadArea.addEventListener(eventName, preventDefaults, false);
-		});
-
-		function preventDefaults(e) {
-			e.preventDefault();
-			e.stopPropagation();
-		}
-
-		['dragenter', 'dragover'].forEach(eventName => {
-			uploadArea.addEventListener(eventName, () => uploadArea.classList.add('drag-active'), false);
-		});
-
-		['dragleave', 'drop'].forEach(eventName => {
-			uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('drag-active'), false);
-		});
-
-		uploadArea.addEventListener('drop', handleDrop, false);
-
-		function handleDrop(e) {
-			const dt = e.dataTransfer;
-			const files = dt.files;
-			
-			if (files && files.length > 0) {
-				fileInput.files = files;
-				handleFileUpload(fileInput);
-			}
-		}
-	}
-
-    // Initialize dark mode from localStorage
-    const isDark = localStorage.getItem('darkMode') === 'true';
-    document.getElementById('theme-checkbox').checked = isDark;
-    if (isDark) document.body.classList.add('dark-mode');
-
-    // Click and Hold original image preview
-    const liveImg = document.getElementById('preview-live');
-    if (liveImg) {
-        liveImg.addEventListener('mousedown', () => {
-            if (window.originalImageSrc && liveImg.src !== window.originalImageSrc) {
-                liveImg.dataset.currentSrc = liveImg.src;
-                liveImg.src = window.originalImageSrc;
-            }
-        });
-        
-        const restoreImage = () => {
-            if (liveImg.dataset.currentSrc && liveImg.src === window.originalImageSrc) {
-                liveImg.src = liveImg.dataset.currentSrc;
-            }
-        };
-        
-        liveImg.addEventListener('mouseup', restoreImage);
-        liveImg.addEventListener('mouseleave', restoreImage);
-    }
-});
-
-function toggleTheme(isDark) {
-    if (isDark) {
-        document.body.classList.add('dark-mode');
-        localStorage.setItem('darkMode', 'true');
-    } else {
-        document.body.classList.remove('dark-mode');
-        localStorage.setItem('darkMode', 'false');
-    }
-}
-
-// ==========================================
-// Resize Modal Logic
-// ==========================================
-let aspectLocked = true;
-let originalAspectRatio = 1;
-
-function formatBytes(bytes) {
-    if(bytes == null || isNaN(bytes)) return '0 B';
-    if(bytes < 1024) return bytes + ' B';
-    else if(bytes < 1048576) return (bytes / 1024).toFixed(0) + ' KB';
-    else return (bytes / 1048576).toFixed(1) + ' MB';
-}
-
-function openResizeModal() {
-    document.getElementById('resize-modal').style.display = 'flex';
-    
-    // Initialize with current meta
-    const meta = window.currentImageMeta || { width: 100, height: 100, size_bytes: 0, format: 'PNG' };
-    
-    document.getElementById('resize_width').value = meta.width;
-    document.getElementById('resize_height').value = meta.height;
-    document.getElementById('resize_percentage').value = 100;
-    
-    originalAspectRatio = meta.width / meta.height;
-    
-    // Reset toggle to pixels
-    document.querySelector('input[name="resize_type"][value="pixels"]').checked = true;
-    toggleResizeType();
-    
-    // Reset quality/format
-    document.getElementById('resize_quality').value = 100;
-    handleQualityInput();
-    document.getElementById('resize_save_format').value = 'AUTO';
-    
-    // Populate current info
-    const currentStr = `${meta.width} x ${meta.height} pixels &nbsp;&nbsp;&nbsp; ${formatBytes(meta.size_bytes)} &nbsp;&nbsp;&nbsp; ${meta.format}`;
-    document.getElementById('current-info-val').innerHTML = currentStr;
-    document.getElementById('new-info-val').innerHTML = currentStr; // Init new same as current
-}
-
-function closeResizeModal() {
-    document.getElementById('resize-modal').style.display = 'none';
-}
-
-function toggleResizeType() {
-    const type = document.querySelector('input[name="resize_type"]:checked').value;
-    document.getElementById('resize-pixels-inputs').style.display = (type === 'pixels') ? 'flex' : 'none';
-    document.getElementById('resize-percentage-inputs').style.display = (type === 'percentage') ? 'flex' : 'none';
-    triggerEstimation();
-}
-
-function toggleAspectLock() {
-    aspectLocked = !aspectLocked;
-    const btn = document.getElementById('aspect-lock-btn');
-    if (aspectLocked) {
-        btn.classList.add('locked');
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="lock-icon-svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
-        
-        // immediately correct height to match width
-        const w = parseInt(document.getElementById('resize_width').value) || 1;
-        document.getElementById('resize_height').value = Math.max(1, Math.round(w / originalAspectRatio));
-        triggerEstimation();
-    } else {
-        btn.classList.remove('locked');
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"></path><line x1="8" y1="12" x2="16" y2="12"></line></svg>'; // Unlocked link icon
-    }
-}
-
-function handleResizeInput(source) {
-    if (source === 'width' && aspectLocked) {
-        const w = parseInt(document.getElementById('resize_width').value) || 1;
-        document.getElementById('resize_height').value = Math.max(1, Math.round(w / originalAspectRatio));
-    } else if (source === 'height' && aspectLocked) {
-        const h = parseInt(document.getElementById('resize_height').value) || 1;
-        document.getElementById('resize_width').value = Math.max(1, Math.round(h * originalAspectRatio));
-    }
-    triggerEstimation();
-}
-
-function handleQualityInput() {
-    const q = document.getElementById('resize_quality').value;
-    document.getElementById('resize-quality-val').innerText = q;
-    let lbl = '';
-    if(q >= 90) lbl = '(High)';
-    else if(q >= 60) lbl = '(Medium)';
-    else lbl = '(Low)';
-    document.getElementById('resize-quality-lbl').innerText = lbl;
-}
-
-const triggerEstimation = debounce(function() {
+window.triggerEstimation = debounce(function() {
     const form = document.getElementById('main-form');
     if(!form) return;
     
-    // We send a lightweight fetch to get new dimensions and size
     const formData = new FormData(form);
     formData.set('action', 'estimate_size');
     formData.set('mode', 'resolution');
     
-    // Pass modal values directly since they might not be fully synced with form if we changed names
     const type = document.querySelector('input[name="resize_type"]:checked').value;
     formData.set('resize_type', type);
     if(type === 'percentage') {
@@ -558,103 +652,19 @@ const triggerEstimation = debounce(function() {
         formData.set('width', document.getElementById('resize_width').value);
         formData.set('height', document.getElementById('resize_height').value);
     }
-    
     formData.set('quality', document.getElementById('resize_quality').value);
     formData.set('save_format', document.getElementById('resize_save_format').value);
     
     document.getElementById('new-info-val').innerHTML = 'Calculating...';
 
-    fetch('/upload', {
-        method: 'POST',
-        body: formData
-    })
+    fetch('/upload', { method: 'POST', body: formData })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            const newStr = `${data.width} x ${data.height} pixels &nbsp;&nbsp;&nbsp; ${formatBytes(data.size_bytes)} &nbsp;&nbsp;&nbsp; ${data.format}`;
+            const newStr = `${data.width} x ${data.height} px &nbsp; ${app.resizeModal.formatBytes(data.size_bytes)} &nbsp; ${data.format}`;
             document.getElementById('new-info-val').innerHTML = newStr;
         } else {
             document.getElementById('new-info-val').innerHTML = 'Error';
         }
-    })
-    .catch(err => {
-        document.getElementById('new-info-val').innerHTML = 'Error';
-    });
+    }).catch(err => document.getElementById('new-info-val').innerHTML = 'Error');
 }, 300);
-
-function saveResize() {
-    // Before saving, ensure the form has the right values
-    const form = document.getElementById('main-form');
-    
-    // We need a hidden input for mode=resolution so that submitForm applies it
-    form.querySelectorAll('input[name="mode"]').forEach(r => r.checked = false);
-    let modeInput = form.querySelector('input[name="mode"][value="resolution"]');
-    if (modeInput) modeInput.checked = true; // Make sure resolution is the active mode when submitting
-    
-    // Also, sync the modal format to the main sidebar save format so when they download it uses it
-    document.getElementById('save_format').value = document.getElementById('resize_save_format').value;
-    
-    applyEdit();
-    closeResizeModal();
-    
-    // Restore the crop tool selection after a delay
-    setTimeout(() => {
-        const cropRadio = document.getElementById('crop');
-        if (cropRadio) {
-            cropRadio.checked = true;
-            executeModeSwitch('crop');
-        }
-    }, 100);
-}
-
-function downloadFromResize() {
-    const form = document.getElementById('main-form');
-    
-    form.querySelectorAll('input[name="mode"]').forEach(r => r.checked = false);
-    let modeInput = form.querySelector('input[name="mode"][value="resolution"]');
-    if (modeInput) modeInput.checked = true; 
-    
-    document.getElementById('save_format').value = document.getElementById('resize_save_format').value;
-    
-    // Set action to edit to commit the resize first
-    document.getElementById('form_action').value = 'edit';
-    const formData = new FormData(form);
-    
-    const loaderOverlay = document.getElementById('loader-overlay');
-    if (loaderOverlay) loaderOverlay.style.display = 'flex';
-    
-    fetch('/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('current_step').value = data.current_step;
-            document.getElementById('preview-live').src = data.image;
-            closeResizeModal();
-            
-            // Now that the resize is applied, trigger the download
-            setTimeout(() => {
-                downloadImage();
-                if (loaderOverlay) loaderOverlay.style.display = 'none';
-            }, 100);
-            
-            // Restore crop mode
-            setTimeout(() => {
-                const cropRadio = document.getElementById('crop');
-                if (cropRadio) {
-                    cropRadio.checked = true;
-                    executeModeSwitch('crop');
-                }
-            }, 200);
-        } else {
-            alert('Error applying resize before download');
-            if (loaderOverlay) loaderOverlay.style.display = 'none';
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        if (loaderOverlay) loaderOverlay.style.display = 'none';
-    });
-}

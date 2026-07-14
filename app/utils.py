@@ -17,6 +17,9 @@ def adjust_image(img, brightness=1.0, contrast=1.0, saturation=1.0, sharpness=1.
         img = enhancer.enhance(sharpness)
     return img
 from rembg import remove
+import threading
+
+rembg_lock = threading.Lock()
 
 def apply_watermark(img, text=None, color='#ffffff', opacity=128, wm_image=None):
     if img.mode != 'RGBA':
@@ -201,4 +204,5 @@ def apply_filter(img, filter_type):
 
 def remove_background(img):
     """Removes the background from the image."""
-    return remove(img)
+    with rembg_lock:
+        return remove(img)

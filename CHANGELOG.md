@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-07-14
+### Added
+- **Mobile-First Responsiveness**: Replaced the fixed left sidebar with a bottom navigation bar on mobile devices (<768px), and converted the settings panel into a collapsible slide-up drawer with an interactive backdrop.
+- **Frontend ES6 Architecture**: Refactored the monolithic 600+ line `main.js` script into a clean, modern ES6 Class-based architecture (`StateManager`, `ThemeManager`, `CropTool`, `ResizeModal`, `ImgitorApp`).
+- **Concurrent Threading**: Wraps heavy image processing (like AI background removal) in a `ThreadPoolExecutor` to prevent blocking Flask Waitress worker threads.
+- **AI Thread Safety**: Added `threading.Lock` to the ONNX `rembg.remove` function to ensure local execution stability and completely eliminate OOM crashes under heavy load.
+- **Improved UX for Background Removal**: Relocated the "Remove Background" action to the top canvas header for instant, one-click execution.
+
 ## [1.9.0] - 2026-07-14
 ### Added
 - **Expanded Filter Library**: Added 4 new high-performance Pillow filters: Invert, High Contrast, Vintage, and Posterize.

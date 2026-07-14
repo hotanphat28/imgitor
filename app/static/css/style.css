@@ -824,19 +824,22 @@ input[type=range]::-webkit-slider-thumb {
     
     .sidebar-left {
         width: 100%;
-        height: auto;
+        height: 60px;
         flex-direction: row;
         border-right: none;
-        border-bottom: var(--border-width) solid var(--border-color);
+        border-top: var(--border-width) solid var(--border-color);
         padding: 0;
-        justify-content: space-between;
+        justify-content: space-around;
+        order: 3;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        z-index: 100;
+        background: var(--sidebar-bg);
     }
     
     .logo {
-        margin-bottom: 0;
-        border-bottom: none;
-        width: auto;
-        padding: 1rem;
+        display: none;
     }
     
     .nav-links, .toolbar-icons {
@@ -848,27 +851,39 @@ input[type=range]::-webkit-slider-thumb {
     }
     
     .nav-btn, .tool-btn {
-        width: 60px;
+        width: 50px;
         border-bottom: none;
-        border-left: var(--border-width) solid var(--border-color);
+        border-left: none;
     }
     
     .bottom-actions {
-        width: 60px;
+        width: 50px;
         margin-top: 0;
         border-top: none;
-        border-left: var(--border-width) solid var(--border-color);
     }
     
     .sidebar-right {
+        position: fixed;
+        bottom: 60px; /* Above the bottom nav */
+        left: 0;
         width: 100%;
-        height: 40vh; /* Adjust as needed */
+        height: 60vh;
         border-left: none;
         border-top: var(--border-width) solid var(--border-color);
+        z-index: 90;
+        transform: translateY(100%);
+        transition: transform 0.3s ease-in-out;
+        box-shadow: 0 -5px 10px rgba(0,0,0,0.2);
+    }
+
+    .sidebar-right.active {
+        transform: translateY(0);
     }
     
     .canvas-wrapper {
-        height: 60vh;
+        flex: 1;
+        order: 1;
+        height: calc(100vh - 60px);
     }
     
     .history-controls {
@@ -882,6 +897,39 @@ input[type=range]::-webkit-slider-thumb {
     
     .modal-content {
         width: 95%;
+    }
+
+    /* Mobile settings toggle overlay */
+    .mobile-settings-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: calc(100vh - 60vh - 60px);
+        background: rgba(0,0,0,0.5);
+        z-index: 89;
+    }
+
+    .mobile-settings-overlay.active {
+        display: block;
+    }
+
+    .crop-toolbar {
+        width: 95%;
+        bottom: 10px;
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .crop-toolbar-angle {
+        gap: 0.5rem;
+    }
+
+    .crop-toolbar .icon-btn, .aspect-btn {
+        width: 35px;
+        height: 35px;
+        padding: 4px;
     }
 }
 

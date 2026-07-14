@@ -143,7 +143,8 @@ def upload_file():
                 wm_image_stream = request.files['wm_image'].stream
                 
             from app.utils import process_image_core
-            processed_img = process_image_core(img, mode, request.form, wm_image_stream)
+            future = executor.submit(process_image_core, img, mode, request.form, wm_image_stream)
+            processed_img = future.result()
 
             if not processed_img:
                 processed_img = img
@@ -235,7 +236,8 @@ def upload_file():
                 wm_image_stream = request.files['wm_image'].stream
                 
             from app.utils import process_image_core
-            processed_img = process_image_core(img, mode, request.form, wm_image_stream)
+            future = executor.submit(process_image_core, img, mode, request.form, wm_image_stream)
+            processed_img = future.result()
 
             if not processed_img:
                 current_app.logger.warning(f'Invalid mode requested: {mode}')
