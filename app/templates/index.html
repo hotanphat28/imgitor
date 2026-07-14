@@ -177,14 +177,26 @@
                     </div>
 
                     <div id="filter-inputs" style="display:none;">
-                        <label class="setting-label">Filter Type</label>
-                        <div class="input-row">
-                            <select name="filter_type" onchange="applyEdit()">
-                                <option value="grayscale">Grayscale</option>
-                                <option value="sepia">Sepia</option>
-                                <option value="blue">Blue Tone</option>
-                                <option value="warm">Warm Tone</option>
-                            </select>
+                        <label class="setting-label">Select Filter</label>
+                        <input type="hidden" name="filter_type" id="filter_type" value="none">
+                        
+                        <div class="filter-thumbnails">
+                            <button type="button" class="filter-thumb active" onclick="selectFilter('none', this)">Normal</button>
+                            <button type="button" class="filter-thumb" onclick="selectFilter('grayscale', this)">B&W</button>
+                            <button type="button" class="filter-thumb" onclick="selectFilter('sepia', this)">Sepia</button>
+                            <button type="button" class="filter-thumb" onclick="selectFilter('blue', this)">Blue</button>
+                            <button type="button" class="filter-thumb" onclick="selectFilter('warm', this)">Warm</button>
+                            <button type="button" class="filter-thumb" onclick="selectFilter('invert', this)">Invert</button>
+                            <button type="button" class="filter-thumb" onclick="selectFilter('posterize', this)">Poster</button>
+                            <button type="button" class="filter-thumb" onclick="selectFilter('high_contrast', this)">Contrast</button>
+                            <button type="button" class="filter-thumb" onclick="selectFilter('vintage', this)">Vintage</button>
+                        </div>
+                        
+                        <div class="filter-actions" style="margin-top: 1.5rem;">
+                            <button type="button" class="primary-btn" style="width: 100%; justify-content: center;" onclick="applyEdit()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                Apply Filter
+                            </button>
                         </div>
                     </div>
 

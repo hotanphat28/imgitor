@@ -55,6 +55,13 @@ function commitCropThenSwitch(newMode) {
 }
 
 function executeModeSwitch(newMode) {
+    if (window.lastCommittedSrc) {
+        const previewLive = document.getElementById('preview-live');
+        if (previewLive && previewLive.src !== window.lastCommittedSrc) {
+            previewLive.src = window.lastCommittedSrc;
+        }
+    }
+
     currentMode = newMode;
     document.querySelector(`input[name="mode"][value="${newMode}"]`).checked = true;
 
@@ -74,9 +81,25 @@ function executeModeSwitch(newMode) {
         destroyCropper();
     }
 
-    if (['filter', 'remove_bg'].includes(newMode)) {
-        livePreview(); // Trigger live preview immediately for these tools
+    if (newMode === 'filter') {
+        const filterInput = document.getElementById('filter_type');
+        if (filterInput) filterInput.value = 'none';
+        document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
+        const normalBtn = document.querySelector('.filter-thumb[onclick*="none"]');
+        if (normalBtn) normalBtn.classList.add('active');
+        livePreview();
+    } else if (newMode === 'remove_bg') {
+        livePreview();
     }
+}
+
+function selectFilter(filterName, btnElement) {
+    document.getElementById('filter_type').value = filterName;
+    document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
+    if (btnElement) {
+        btnElement.classList.add('active');
+    }
+    livePreview();
 }
 
 function debounce(func, wait) {
@@ -250,6 +273,7 @@ function submitForm() {
             document.getElementById('current_step').value = data.current_step;
             
             document.getElementById('preview-live').src = data.image;
+            window.lastCommittedSrc = data.image;
 
             window.currentImageMeta = {
                 width: data.width,

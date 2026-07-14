@@ -784,6 +784,38 @@ input[type=range]::-webkit-slider-thumb {
     color: var(--text-primary);
 }
 
+/* Filter Thumbnails */
+.filter-thumbnails {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.filter-thumb {
+    background: var(--bg-color);
+    border: var(--border-width) solid var(--border-color);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 0.5rem 0.25rem;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.filter-thumb:hover {
+    background: var(--text-primary);
+    color: var(--bg-color);
+}
+
+.filter-thumb.active {
+    background: var(--text-primary);
+    color: var(--bg-color);
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+}
+
 /* Mobile Responsive Layout */
 @media (max-width: 768px) {
     .app-layout {

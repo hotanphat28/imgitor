@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-07-14
+### Added
+- **Expanded Filter Library**: Added 4 new high-performance Pillow filters: Invert, High Contrast, Vintage, and Posterize.
+- **Visual Filter UI**: Replaced the generic dropdown with a Brutalist 3x3 grid of interactive filter thumbnails.
+- **Filter Live Preview**: Reworked the filter workflow to live-preview effects without auto-committing. Users can explore filters before clicking "Apply Filter".
+
+### Fixed
+- **Filter Initialization Bug**: Fixed an issue where the image preview failed to reset when switching away from the Filter tool with an unapplied filter.
+- **Transparency Preview Crash**: Resolved a backend crash that occurred when generating JPEG live previews for RGBA images with the "Normal" filter selected.
+
 ## [1.8.0] - 2026-06-18
 ### Added
 - **Playwright E2E Testing**: Replaced the basic Flask API integration tests with a robust End-to-End UI testing framework using `pytest-playwright`.

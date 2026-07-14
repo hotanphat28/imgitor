@@ -148,10 +148,26 @@ def rotate_image(img, degrees):
 
 def apply_filter(img, filter_type):
     """Applies a specific color filter to the image."""
+    if filter_type == "none":
+        return img
+        
     img = img.convert("RGB")
     
     if filter_type == "grayscale":
         return img.convert("L")
+    elif filter_type == "invert":
+        from PIL import ImageOps
+        return ImageOps.invert(img)
+    elif filter_type == "high_contrast":
+        from PIL import ImageEnhance
+        return ImageEnhance.Contrast(img).enhance(1.5)
+    elif filter_type == "vintage":
+        from PIL import ImageEnhance
+        img = ImageEnhance.Color(img).enhance(0.5)
+        return ImageEnhance.Brightness(img).enhance(1.1)
+    elif filter_type == "posterize":
+        from PIL import ImageOps
+        return ImageOps.posterize(img, 3)
     
     # Get pixel data
     pixels = img.load()

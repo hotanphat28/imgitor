@@ -153,6 +153,13 @@ def upload_file():
                 processed_img.thumbnail((800, 800), Image.Resampling.NEAREST)
 
             buffer = io.BytesIO()
+            if processed_img.mode in ('RGBA', 'LA', 'P'):
+                bg = Image.new('RGB', processed_img.size, (255, 255, 255))
+                if processed_img.mode == 'RGBA':
+                    bg.paste(processed_img, mask=processed_img.split()[3])
+                else:
+                    bg.paste(processed_img)
+                processed_img = bg
             processed_img.save(buffer, format='JPEG', quality=80) # Use JPEG for even faster network transfer during preview
             img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
             

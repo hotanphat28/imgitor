@@ -17,7 +17,7 @@ A browser-based image processing tool created with Flask. It allows you to:
 - **Processing Modes**:
     1. **Resize**: Interactive modal with pixel or percentage scaling, aspect ratio locking, and live file-size estimation before downloading.
     2. **Crop & Rotate**: Unified interactive visual tool with preset aspect ratios, custom angle slider, and flip controls.
-    3. **Filters**: Apply Grayscale, Sepia, Blue Tone, or Warm Tone.
+    3. **Filters**: Apply Grayscale, Sepia, Blue Tone, Warm Tone, Invert, Posterize, High Contrast, or Vintage using an interactive visual thumbnail grid.
     4. **Adjustments**: Fine-tune Brightness, Contrast, Saturation, and Sharpness.
     5. **Watermark**: Protect images with text (opacity/color) or image logos.
     6. **Remove Background**: AI-powered background removal.
