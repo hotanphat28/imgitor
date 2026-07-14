@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-07-15
+### Added
+- **Interactive History Drop-Down Menu**: Replaced blind undo/redo clicking with a sleek, brutalist drop-down menu that chronicles every UI action. Users can click any item in the history list to instantly time-travel to past or future states.
+
+### Changed
+- **Non-Destructive Image Processing Pipeline**: The image processing logic now constructs a dynamic stack of operations in memory, completely eliminating the legacy "baking" process that caused compounding artifacts during adjustments (Brightness, Contrast, Saturation, Sharpness).
+- **Frontend-Driven History Manager**: Migrated history tracking from the server's disk to an intelligent in-browser ES6 Class (`StateManager`), resulting in zero-latency UI rollbacks and massive reductions in server I/O overhead.
+
 ## [2.0.0] - 2026-07-14
 ### Added
 - **Mobile-First Responsiveness**: Replaced the fixed left sidebar with a bottom navigation bar on mobile devices (<768px), and converted the settings panel into a collapsible slide-up drawer with an interactive backdrop.

@@ -137,6 +137,59 @@ def process_image_core(img, mode, params, wm_image_stream=None):
 
     return processed_img
 
+def process_image_pipeline(img, params, wm_image_stream=None):
+    """Pipeline processor that applies all non-destructive effects sequentially.
+       Used for live previews and final downloads."""
+    processed_img = img.copy()
+    
+    # 1. Crop
+    if params.get('crop_w') and params.get('crop_w') != 'NaN' and params.get('crop_w') != '':
+        try:
+            x, y = int(float(params.get('crop_x', 0))), int(float(params.get('crop_y', 0)))
+            w, h = int(float(params.get('crop_w', img.width))), int(float(params.get('crop_h', img.height)))
+            
+            rotate = float(params.get('crop_rotate', 0))
+            scaleX = float(params.get('crop_scaleX', 1))
+            scaleY = float(params.get('crop_scaleY', 1))
+            
+            from PIL import ImageOps
+            if scaleX == -1:
+                processed_img = ImageOps.mirror(processed_img)
+            if scaleY == -1:
+                processed_img = ImageOps.flip(processed_img)
+                
+            if rotate != 0:
+                processed_img = processed_img.rotate(-rotate, expand=True, resample=Image.Resampling.BICUBIC)
+                
+            processed_img = crop_image(processed_img, x, y, w, h)
+        except (ValueError, TypeError):
+            pass # Invalid crop parameters, skip cropping
+
+    # 2. Filter
+    filter_type = params.get('filter_type', 'none')
+    if filter_type and filter_type != 'none':
+        processed_img = apply_filter(processed_img, filter_type)
+        
+    # 3. Adjustments
+    try:
+        brightness = float(params.get('brightness', 1.0))
+        contrast = float(params.get('contrast', 1.0))
+        saturation = float(params.get('saturation', 1.0))
+        sharpness = float(params.get('sharpness', 1.0))
+        if brightness != 1.0 or contrast != 1.0 or saturation != 1.0 or sharpness != 1.0:
+            processed_img = adjust_image(processed_img, brightness, contrast, saturation, sharpness)
+    except (ValueError, TypeError):
+        pass # Invalid adjust parameters, skip
+
+    # 4. Watermark
+    wm_text = params.get('wm_text')
+    if wm_text or wm_image_stream:
+        color = params.get('wm_color', '#ffffff')
+        opacity = int(params.get('wm_opacity', 128))
+        processed_img = apply_watermark(processed_img, wm_text, color, opacity, wm_image_stream)
+
+    return processed_img
+
 def resize_by_resolution(img, width, height):
     """Resizes the image to specific pixel dimensions."""
     return img.resize((width, height), Image.Resampling.LANCZOS)

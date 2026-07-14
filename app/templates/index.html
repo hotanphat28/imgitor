@@ -100,6 +100,17 @@
                         <button type="button" class="icon-btn" onclick="redoStep()" id="redo-btn" disabled title="Redo" aria-label="Redo Edit">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                         </button>
+                        <div style="position: relative; display: inline-block;">
+                            <button type="button" class="icon-btn" onclick="document.getElementById('history-dropdown-menu').classList.toggle('active')" title="History" aria-label="History">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </button>
+                            <div id="history-dropdown-menu" class="history-dropdown-menu">
+                                <div class="dropdown-header">History</div>
+                                <ul id="history-dropdown-list" class="history-dropdown-list">
+                                    <!-- Populated by JS -->
+                                </ul>
+                            </div>
+                        </div>
                         <button type="button" class="icon-btn danger" onclick="resetAll()" title="Reset All Edits" style="width: auto; padding: 0 1rem;" aria-label="Reset All Edits">
                             RESET
                         </button>
@@ -191,13 +202,6 @@
                             <button type="button" class="filter-thumb" onclick="selectFilter('high_contrast', this)">Contrast</button>
                             <button type="button" class="filter-thumb" onclick="selectFilter('vintage', this)">Vintage</button>
                         </div>
-                        
-                        <div class="filter-actions" style="margin-top: 1.5rem;">
-                            <button type="button" class="primary-btn" style="width: 100%; justify-content: center;" onclick="applyEdit()">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                Apply Filter
-                            </button>
-                        </div>
                     </div>
 
                     <div id="adjust-inputs" style="display:none;" class="slider-group">
@@ -206,41 +210,41 @@
                                 <label>Brightness</label>
                                 <span id="val-bright" class="val-badge">1.0</span>
                             </div>
-                            <input type="range" name="brightness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-bright').innerText=this.value; livePreview()" onchange="applyEdit()">
+                            <input type="range" name="brightness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-bright').innerText=this.value; livePreview()" onchange="app.saveState('Changed Brightness')">
                         </div>
                         <div class="slider-item">
                             <div class="slider-header">
                                 <label>Contrast</label>
                                 <span id="val-cont" class="val-badge">1.0</span>
                             </div>
-                            <input type="range" name="contrast" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-cont').innerText=this.value; livePreview()" onchange="applyEdit()">
+                            <input type="range" name="contrast" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-cont').innerText=this.value; livePreview()" onchange="app.saveState('Changed Contrast')">
                         </div>
                         <div class="slider-item">
                             <div class="slider-header">
                                 <label>Saturation</label>
                                 <span id="val-sat" class="val-badge">1.0</span>
                             </div>
-                            <input type="range" name="saturation" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sat').innerText=this.value; livePreview()" onchange="applyEdit()">
+                            <input type="range" name="saturation" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sat').innerText=this.value; livePreview()" onchange="app.saveState('Changed Saturation')">
                         </div>
                         <div class="slider-item">
                             <div class="slider-header">
                                 <label>Sharpness</label>
                                 <span id="val-sharp" class="val-badge">1.0</span>
                             </div>
-                            <input type="range" name="sharpness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sharp').innerText=this.value; livePreview()" onchange="applyEdit()">
+                            <input type="range" name="sharpness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sharp').innerText=this.value; livePreview()" onchange="app.saveState('Changed Sharpness')">
                         </div>
                     </div>
 
                     <div id="watermark-inputs" style="display:none;">
                         <div class="wm-group">
                             <label class="setting-label">Text Watermark</label>
-                            <input type="text" name="wm_text" placeholder="Enter text..." oninput="livePreview()" onchange="applyEdit()">
+                            <input type="text" name="wm_text" placeholder="Enter text..." oninput="livePreview()" onchange="app.saveState('Changed Watermark Text')">
                         </div>
                         <div class="wm-row">
                             <div class="wm-group">
                                 <label class="setting-label">Color</label>
                                 <div class="color-picker-wrapper">
-                                    <input type="color" name="wm_color" value="#ffffff" class="color-picker" oninput="livePreview()" onchange="applyEdit()">
+                                    <input type="color" name="wm_color" value="#ffffff" class="color-picker" oninput="livePreview()" onchange="app.saveState('Changed Watermark Color')">
                                 </div>
                             </div>
                             <div class="wm-group" style="flex:2;">
@@ -248,12 +252,12 @@
                                     <label>Opacity</label>
                                     <span id="val-wm-opacity" class="val-badge">128</span>
                                 </div>
-                                <input type="range" name="wm_opacity" min="0" max="255" value="128" oninput="document.getElementById('val-wm-opacity').innerText=this.value; livePreview()" onchange="applyEdit()">
+                                <input type="range" name="wm_opacity" min="0" max="255" value="128" oninput="document.getElementById('val-wm-opacity').innerText=this.value; livePreview()" onchange="app.saveState('Changed Watermark Opacity')">
                             </div>
                         </div>
                         <div class="wm-group">
                             <label class="setting-label">Or Image Logo</label>
-                            <input type="file" name="wm_image" accept="image/*" class="file-input-small" onchange="applyEdit()">
+                            <input type="file" name="wm_image" accept="image/*" class="file-input-small" onchange="livePreview(); app.saveState('Changed Watermark Logo')">
                         </div>
                     </div>
                 </div>

@@ -103,24 +103,7 @@ def upload_file():
         with open(session_path / 'filename.txt', 'r') as f:
             orig_name = f.read().strip()
             
-    if action == 'undo':
-        if current_step > 0:
-            current_step -= 1
-        return get_preview_response(session_path, current_step, session_id, orig_name)
-        
-    elif action == 'redo':
-        if (session_path / f"{current_step + 1}.png").exists():
-            current_step += 1
-        return get_preview_response(session_path, current_step, session_id, orig_name)
-
-    elif action == 'reset':
-        current_step = 0
-        for p in session_path.glob("*.png"):
-            if p.stem.isdigit() and int(p.stem) > 0:
-                p.unlink()
-        return get_preview_response(session_path, current_step, session_id, orig_name)
-
-    elif action == 'preview_only':
+    if action == 'preview_only':
         mode = request.form.get('mode', '')
         try:
             img_path = session_path / f"{current_step}.png"
@@ -142,8 +125,8 @@ def upload_file():
             if 'wm_image' in request.files and request.files['wm_image'].filename != '':
                 wm_image_stream = request.files['wm_image'].stream
                 
-            from app.utils import process_image_core
-            future = executor.submit(process_image_core, img, mode, request.form, wm_image_stream)
+            from app.utils import process_image_pipeline
+            future = executor.submit(process_image_pipeline, img, request.form, wm_image_stream)
             processed_img = future.result()
 
             if not processed_img:
@@ -269,6 +252,15 @@ def upload_file():
                 return jsonify({"error": "Current state not found."}), 400
                 
             img = Image.open(img_path)
+            
+            wm_image_stream = None
+            if 'wm_image' in request.files and request.files['wm_image'].filename != '':
+                wm_image_stream = request.files['wm_image'].stream
+                
+            from app.utils import process_image_pipeline
+            future = executor.submit(process_image_pipeline, img, request.form, wm_image_stream)
+            img = future.result() or img
+            
             user_format = request.form.get('save_format', 'AUTO')
             save_format = "PNG" if img.mode in ('RGBA', 'P') else "JPEG"
             

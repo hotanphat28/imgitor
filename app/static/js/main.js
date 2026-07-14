@@ -7,6 +7,9 @@ class StateManager {
         this.originalImageSrc = '';
         this.currentImageMeta = { width: 100, height: 100, size_bytes: 0, format: 'PNG' };
         this.cropModified = false;
+        
+        this.history = [];
+        this.historyIndex = -1;
     }
 }
 
@@ -221,12 +224,18 @@ class ImgitorApp {
             }
         });
 
-        // Close aspect dropdown when clicking outside
+        // Close aspect dropdown and history dropdown when clicking outside
         document.addEventListener('click', (event) => {
-            const selector = document.querySelector('.aspect-ratio-selector');
-            const dropdown = document.getElementById('aspect-dropdown');
-            if (selector && dropdown && !selector.contains(event.target)) {
-                dropdown.style.display = 'none';
+            const aspectSelector = document.querySelector('.aspect-ratio-selector');
+            const aspectDropdown = document.getElementById('aspect-dropdown');
+            if (aspectSelector && aspectDropdown && !aspectSelector.contains(event.target)) {
+                aspectDropdown.style.display = 'none';
+            }
+            
+            const historyMenu = document.getElementById('history-dropdown-menu');
+            const historyBtn = historyMenu?.previousElementSibling;
+            if (historyMenu && historyBtn && !historyMenu.contains(event.target) && !historyBtn.contains(event.target)) {
+                historyMenu.classList.remove('active');
             }
         });
     }
@@ -328,19 +337,21 @@ class ImgitorApp {
                 document.getElementById('current_step').value = data.current_step;
                 document.getElementById('preview-live').src = data.image;
                 this.state.currentStep = data.current_step;
-                this.updateUndoRedo();
                 this.state.cropModified = false;
                 this.executeModeSwitch(newMode);
+                this.saveState('Crop Applied');
             }
         })
         .catch(err => { console.error(err); this.hideLoader(); });
     }
 
     executeModeSwitch(newMode) {
-        if (this.state.lastCommittedSrc) {
-            const previewLive = document.getElementById('preview-live');
-            if (previewLive && previewLive.src !== this.state.lastCommittedSrc) {
-                previewLive.src = this.state.lastCommittedSrc;
+        if (newMode === 'crop') {
+            if (this.state.lastCommittedSrc) {
+                const previewLive = document.getElementById('preview-live');
+                if (previewLive && previewLive.src !== this.state.lastCommittedSrc) {
+                    previewLive.src = this.state.lastCommittedSrc;
+                }
             }
         }
 
@@ -359,10 +370,12 @@ class ImgitorApp {
             this.cropTool.destroy();
         }
 
-        if (newMode === 'filter') {
-            document.getElementById('filter_type').value = 'none';
+        if (newMode === 'filter' && document.getElementById('filter_type').value === 'none') {
             document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.filter-thumb[onclick*="none"]')?.classList.add('active');
+        }
+        
+        if (newMode !== 'crop') {
             window.livePreview();
         }
     }
@@ -371,6 +384,11 @@ class ImgitorApp {
         document.getElementById('filter_type').value = filterName;
         document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
         if (btnElement) btnElement.classList.add('active');
+        
+        let prettyName = filterName.charAt(0).toUpperCase() + filterName.slice(1).replace('_', ' ');
+        if (filterName === 'none') prettyName = 'None';
+        this.saveState('Applied Filter: ' + prettyName);
+        
         window.livePreview();
     }
 
@@ -427,7 +445,17 @@ class ImgitorApp {
                 if (['init', 'undo', 'redo'].includes(action)) document.getElementById('form_action').value = 'edit';
                 if (action === 'init') {
                     this.state.originalImageSrc = data.image;
+                    this.state.history = [];
+                    this.state.historyIndex = -1;
+                    this.saveState('Original Image');
                     this.toggleInputs();
+                } else if (action === 'edit') {
+                    let actionName = 'Applied Edit';
+                    const modeEl = document.querySelector('input[name="mode"]:checked');
+                    if (modeEl && modeEl.value === 'crop') actionName = 'Crop Applied';
+                    else if (document.getElementById('hidden-rembg-mode')) actionName = 'Background Removed';
+                    else if (modeEl && modeEl.value === 'resolution') actionName = 'Resized Image';
+                    this.saveState(actionName);
                 }
                 
                 this.cropTool.replace(data.image);
@@ -439,15 +467,130 @@ class ImgitorApp {
         .finally(() => this.hideLoader());
     }
 
+    getFormState() {
+        return {
+            current_step: this.state.currentStep,
+            filter_type: document.getElementById('filter_type')?.value || 'none',
+            brightness: document.querySelector('input[name="brightness"]')?.value || '1.0',
+            contrast: document.querySelector('input[name="contrast"]')?.value || '1.0',
+            saturation: document.querySelector('input[name="saturation"]')?.value || '1.0',
+            sharpness: document.querySelector('input[name="sharpness"]')?.value || '1.0',
+            wm_text: document.querySelector('input[name="wm_text"]')?.value || '',
+            wm_color: document.querySelector('input[name="wm_color"]')?.value || '#ffffff',
+            wm_opacity: document.querySelector('input[name="wm_opacity"]')?.value || '128'
+        };
+    }
+
+    applyFormState(stateObj) {
+        this.state.currentStep = stateObj.current_step;
+        document.getElementById('current_step').value = stateObj.current_step;
+        
+        if (document.getElementById('filter_type')) document.getElementById('filter_type').value = stateObj.filter_type;
+        document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
+        const activeFilterBtn = document.querySelector(`.filter-thumb[onclick*="'${stateObj.filter_type}'"]`);
+        if (activeFilterBtn) activeFilterBtn.classList.add('active');
+
+        const sliders = ['brightness', 'contrast', 'saturation', 'sharpness', 'wm_text', 'wm_color', 'wm_opacity'];
+        sliders.forEach(key => {
+            const input = document.querySelector(`input[name="${key}"]`);
+            if (input) {
+                input.value = stateObj[key];
+                const valBadge = document.getElementById(`val-${key.replace('wm_', 'wm-').replace('brightness', 'bright').replace('contrast', 'cont').replace('saturation', 'sat').replace('sharpness', 'sharp')}`);
+                if (valBadge) valBadge.innerText = stateObj[key];
+            }
+        });
+    }
+
+    saveState(actionName = 'State Changed') {
+        const state = this.getFormState();
+        state.actionName = actionName;
+        
+        if (this.state.historyIndex < this.state.history.length - 1) {
+            this.state.history = this.state.history.slice(0, this.state.historyIndex + 1);
+        }
+        
+        if (this.state.history.length > 0) {
+            const lastState = this.state.history[this.state.history.length - 1];
+            // Compare without actionName
+            const lastStateCmp = { ...lastState }; delete lastStateCmp.actionName;
+            const stateCmp = { ...state }; delete stateCmp.actionName;
+            if (JSON.stringify(lastStateCmp) === JSON.stringify(stateCmp)) return;
+        }
+        
+        this.state.history.push(state);
+        this.state.historyIndex = this.state.history.length - 1;
+        this.updateUndoRedo();
+    }
+
+    jumpToState(index) {
+        if (index >= 0 && index < this.state.history.length) {
+            this.state.historyIndex = index;
+            this.applyFormState(this.state.history[this.state.historyIndex]);
+            this.updateUndoRedo();
+            window.livePreview();
+        }
+    }
+
     applyEdit() { document.getElementById('form_action').value = 'edit'; this.submitForm(); }
-    undoStep() { document.getElementById('form_action').value = 'undo'; this.submitForm(); }
-    redoStep() { document.getElementById('form_action').value = 'redo'; this.submitForm(); }
-    resetAll() { document.getElementById('form_action').value = 'reset'; this.submitForm(); }
+    
+    undoStep() {
+        if (this.state.historyIndex > 0) {
+            this.state.historyIndex--;
+            this.applyFormState(this.state.history[this.state.historyIndex]);
+            this.updateUndoRedo();
+            window.livePreview();
+        }
+    }
+
+    redoStep() {
+        if (this.state.historyIndex < this.state.history.length - 1) {
+            this.state.historyIndex++;
+            this.applyFormState(this.state.history[this.state.historyIndex]);
+            this.updateUndoRedo();
+            window.livePreview();
+        }
+    }
+
+    resetAll() {
+        if (this.state.history.length > 0) {
+            this.state.historyIndex = 0;
+            this.applyFormState(this.state.history[0]);
+            this.updateUndoRedo();
+            window.livePreview();
+        }
+    }
 
     updateUndoRedo() {
-        const step = parseInt(document.getElementById('current_step').value);
-        document.getElementById('undo-btn').disabled = (step <= 0);
-        document.getElementById('redo-btn').disabled = false;
+        document.getElementById('undo-btn').disabled = (this.state.historyIndex <= 0);
+        document.getElementById('redo-btn').disabled = (this.state.historyIndex >= this.state.history.length - 1);
+        this.renderHistoryList();
+    }
+
+    renderHistoryList() {
+        const container = document.getElementById('history-dropdown-list');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        // Loop backwards to show newest first
+        for (let i = this.state.history.length - 1; i >= 0; i--) {
+            const state = this.state.history[i];
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            if (i === this.state.historyIndex) li.classList.add('active');
+            if (i > this.state.historyIndex) li.classList.add('future');
+            
+            li.onclick = () => {
+                this.jumpToState(i);
+                document.getElementById('history-dropdown-menu').classList.remove('active');
+            };
+            
+            li.innerHTML = `
+                <span class="history-step">Step ${i}</span>
+                <span class="history-action">${state.actionName || 'State'}</span>
+            `;
+            container.appendChild(li);
+        }
     }
 
     removeBackground() {
@@ -595,6 +738,8 @@ window.downloadFromResize = () => {
         if (data.success) {
             document.getElementById('current_step').value = data.current_step;
             document.getElementById('preview-live').src = data.image;
+            app.state.currentStep = data.current_step;
+            app.saveState('Resized Image');
             app.resizeModal.close();
             setTimeout(() => { app.downloadImage(); app.hideLoader(); }, 100);
             setTimeout(() => {
