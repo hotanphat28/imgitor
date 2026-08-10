@@ -8,9 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Created `CONTEXT.md` to serve as a comprehensive documentation of project context, merging information from `AGENTS.md` and `README.md`.
+- **Quality & CI/CD**: Added GitHub Actions workflow (`ci.yml`) for automated testing, linting (`ruff`), and security scanning (`bandit`).
+- **Test Coverage**: Added comprehensive backend unit tests (`test_api.py`, `test_routes.py`), increasing backend coverage to >60%.
 
 ### Changed
 - Updated `AGENTS.md` to reference `CONTEXT.md` for project architecture, tech stack, and design aesthetics.
+- Formatted entire backend with `ruff`.
 
 ## [2.1.0] - 2026-07-15
 ### Added

@@ -90,11 +90,11 @@ docker run -p 5000:5000 imgitor
 
 ## 🧪 Testing
 
-To run the automated test suite, which includes both pure Python unit tests and Playwright End-to-End (E2E) browser tests, use pytest:
+To run the automated test suite, which includes both pure Python unit tests and Playwright End-to-End (E2E) browser tests, use `uv`:
 ```bash
-pytest tests/
+uv run pytest --cov=app
 ```
-*(Note: To run the E2E UI tests, `pytest-playwright` must be installed and you must run `playwright install` to fetch browser binaries.)*
+*(Note: To run the E2E UI tests, you must run `uv run playwright install --with-deps chromium` to fetch browser binaries.)*
 
 ## 📂 Project Structure
 

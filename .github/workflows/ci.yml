@@ -1,0 +1,42 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-and-security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    - name: Install uv
+      run: pip install uv
+    - name: Install dependencies
+      run: uv pip install --system -r requirements.txt
+    - name: Run Ruff (Linting & Formatting)
+      run: uv run ruff check app tests
+    - name: Run Bandit (Security)
+      run: uv run bandit -r app
+
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    - name: Install uv
+      run: pip install uv
+    - name: Install dependencies
+      run: uv pip install --system -r requirements.txt
+    - name: Install Playwright browsers (for E2E)
+      run: uv run playwright install --with-deps chromium
+    - name: Run pytest with coverage
+      run: uv run pytest --cov=app --cov-report=xml

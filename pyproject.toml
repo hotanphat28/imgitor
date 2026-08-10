@@ -1,0 +1,14 @@
+[tool.pytest.ini_options]
+addopts = "--cov=app --cov-report=term-missing"
+testpaths = [
+    "tests",
+]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+# BLE001: Do not catch blind exception `Exception` (common in Flask error handlers)
+# SIM115: Use context manager for opening files
+# PIE810: Call `startswith` once with a `tuple`
+ignore = ["BLE001", "SIM115", "PIE810"]

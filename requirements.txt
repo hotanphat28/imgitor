@@ -8,3 +8,6 @@ pytest
 Flask-Limiter
 Flask-Caching
 pytest-playwright
+pytest-cov
+ruff
+bandit
