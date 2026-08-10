@@ -1,6 +1,5 @@
 import io
 import json
-from PIL import Image
 
 
 def test_index(client):
