@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Created `CONTEXT.md` to serve as a comprehensive documentation of project context, merging information from `AGENTS.md` and `README.md`.
+
+### Changed
+- Updated `AGENTS.md` to reference `CONTEXT.md` for project architecture, tech stack, and design aesthetics.
+
 ## [2.1.0] - 2026-07-15
 ### Added
 - **Interactive History Drop-Down Menu**: Replaced blind undo/redo clicking with a sleek, brutalist drop-down menu that chronicles every UI action. Users can click any item in the history list to instantly time-travel to past or future states.

@@ -112,5 +112,6 @@ imgitor/
 │       │   └── style.css
 │       └── js/
 │           └── main.js
+├── CONTEXT.md           # Project context and architecture details
 └── README.md
 ```
