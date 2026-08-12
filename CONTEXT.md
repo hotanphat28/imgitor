@@ -10,7 +10,7 @@ Imgitor is a browser-based image processing tool created with Flask. It allows u
 
 ## Architecture
 - **Web Application:** Standard Flask application utilizing blueprints. Templates are located in `app/templates/` and static assets in `app/static/`.
-- **RESTful API:** Exposes endpoints under `/api/v1/process` for programmatic access.
+- **RESTful API:** Exposes endpoints under `/api/v1/process` for programmatic access. (See `API.md`).
 - **Session State Management:** The app features a seamless auto-commit workflow. Properties are edited and transitioned without a manual 'Apply' step, utilizing an undo/redo history stack tied to the user's session.
 - **Non-Destructive Pipeline**: The backend dynamically processes an edit stack in memory, preventing compounding artifacts and allowing you to adjust sliders infinitely without degrading the original image quality.
 

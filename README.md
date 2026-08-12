@@ -14,7 +14,7 @@ A browser-based image processing tool created with Flask. It allows you to:
 - **Interactive Undo/Redo History**: A brutalist drop-down menu tracks every UI interaction. Simply click any state in the history list to instantly jump back in time, with zero-latency live preview rollbacks.
 - **Blazing-Fast Live Preview**: See a live preview of your edits instantly on the canvas. The engine dynamically downscales images during slider adjustments for native, sub-50ms desktop-like performance.
 - **Batch Processing**: Upload multiple images, configure a bulk edit (e.g., watermark all images), and download them as a ZIP archive.
-- **RESTful API**: Exposes a `/api/v1/process` endpoint for developers to process images programmatically.
+- **RESTful API**: Exposes a `/api/v1/process` endpoint for developers to process images programmatically. (See [API Documentation](API.md)).
 - **Processing Modes**:
     1. **Resize**: Interactive modal with pixel or percentage scaling, aspect ratio locking, and live file-size estimation before downloading.
     2. **Crop & Rotate**: Unified interactive visual tool with preset aspect ratios, custom angle slider, and flip controls.

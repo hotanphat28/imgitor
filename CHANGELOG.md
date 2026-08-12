@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- **API Documentation**: Added comprehensive `API.md` to document the `/api/v1/process` RESTful endpoint, and linked it in the README.
 - **Documentation**: Embedded feature showcase videos for Filters and Dithering into the README.
 - **Dithering Effect**: Added a 1-bit retro dithering tool with options for Floyd-Steinberg, Bayer, and Atkinson algorithms via the `dithering` package.
 - Created `CONTEXT.md` to serve as a comprehensive documentation of project context, merging information from `AGENTS.md` and `README.md`.
