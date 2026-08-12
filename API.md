@@ -106,7 +106,7 @@ Append these parameters to your `multipart/form-data` request based on the `mode
 **Apply a Grayscale Filter and save as JPEG:**
 ```bash
 curl -X POST http://127.0.0.1:5000/api/v1/process \
-  -H "Authorization: Bearer imgitor-secret-key-123" \
+  -H "Authorization: Bearer <YOUR_API_KEY>" \
   -F "image=@/path/to/your/image.jpg" \
   -F "mode=filter" \
   -F "filter_type=grayscale" \
@@ -117,7 +117,7 @@ curl -X POST http://127.0.0.1:5000/api/v1/process \
 **Remove Background:**
 ```bash
 curl -X POST http://127.0.0.1:5000/api/v1/process \
-  -H "Authorization: Bearer imgitor-secret-key-123" \
+  -H "Authorization: Bearer <YOUR_API_KEY>" \
   -F "image=@/path/to/product.png" \
   -F "mode=remove_bg" \
   -F "save_format=PNG" \
@@ -127,7 +127,7 @@ curl -X POST http://127.0.0.1:5000/api/v1/process \
 **Resize by 50%:**
 ```bash
 curl -X POST http://127.0.0.1:5000/api/v1/process \
-  -H "Authorization: Bearer imgitor-secret-key-123" \
+  -H "Authorization: Bearer <YOUR_API_KEY>" \
   -F "image=@/path/to/large_image.jpg" \
   -F "mode=resolution" \
   -F "resize_type=percentage" \

@@ -1,6 +1,6 @@
 import io
-import traceback
 import secrets
+import traceback
 from functools import wraps
 
 from flask import Blueprint, current_app, jsonify, request, send_file
@@ -14,8 +14,11 @@ api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 def require_api_key(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Allow default or from .env
-        api_key = current_app.config.get("API_KEY", "imgitor-secret-key-123")
+        # Require API_KEY to be set in .env
+        api_key = current_app.config.get("API_KEY")
+        if not api_key:
+            return jsonify({"error": "API is disabled. API_KEY is not configured on the server."}), 503
+
         provided_key = request.headers.get("Authorization")
         if not provided_key or not secrets.compare_digest(provided_key.replace("Bearer ", ""), api_key):
             return jsonify({"error": "Unauthorized. Provide valid Bearer token."}), 401
