@@ -12,6 +12,11 @@ By default, you can configure your API key in the `.env` file using the `API_KEY
 Authorization: Bearer <YOUR_API_KEY>
 ```
 
+> [!WARNING]
+> **Security Best Practices**
+> - **Always use HTTPS/TLS** in production. Since this API uses a static Bearer token, transmitting it over unencrypted HTTP makes it trivial to intercept via Man-in-the-Middle (MITM) attacks.
+> - **Keep your API key secret**. Never commit your `.env` file to version control or expose the key in client-side code (e.g., frontend JavaScript).
+
 ---
 
 ## Endpoint: Process Image
