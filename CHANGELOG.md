@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- **Documentation**: Embedded feature showcase videos for Filters and Dithering into the README.
 - **Dithering Effect**: Added a 1-bit retro dithering tool with options for Floyd-Steinberg, Bayer, and Atkinson algorithms via the `dithering` package.
 - Created `CONTEXT.md` to serve as a comprehensive documentation of project context, merging information from `AGENTS.md` and `README.md`.
 - **Quality & CI/CD**: Added GitHub Actions workflow (`ci.yml`) for automated testing, linting (`ruff`), and security scanning (`bandit`).
@@ -15,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated `AGENTS.md` to reference `CONTEXT.md` for project architecture, tech stack, and design aesthetics.
 - Formatted entire backend with `ruff`.
+
+### Fixed
+- Fixed an import sorting lint error in `test_utils.py` that was causing GitHub Actions checks to fail.
 
 ## [2.1.0] - 2026-07-15
 ### Added

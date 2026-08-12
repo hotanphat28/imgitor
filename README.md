@@ -19,9 +19,13 @@ A browser-based image processing tool created with Flask. It allows you to:
     1. **Resize**: Interactive modal with pixel or percentage scaling, aspect ratio locking, and live file-size estimation before downloading.
     2. **Crop & Rotate**: Unified interactive visual tool with preset aspect ratios, custom angle slider, and flip controls.
     3. **Filters**: Apply Grayscale, Sepia, Blue Tone, Warm Tone, Invert, Posterize, High Contrast, or Vintage using an interactive visual thumbnail grid.
+       
+       <video src="features-videos/feature-filters.mp4" width="100%" controls></video>
     4. **Adjustments**: Fine-tune Brightness, Contrast, Saturation, and Sharpness.
     5. **Watermark**: Protect images with text (opacity/color) or image logos.
     6. **Dithering**: Apply retro 1-bit dithering effects (Floyd-Steinberg, Bayer, Atkinson).
+       
+       <video src="features-videos/feature-dithering-effects.mp4" width="100%" controls></video>
     7. **Remove Background**: AI-powered background removal.
 - **Format Conversion**: Choose output format or let the app automatically decide to preserve transparency.
 - **Security & Performance**: Rate limiting prevents abuse, while local caching ensures lightning-fast undo/redo.

@@ -1,4 +1,4 @@
-from app.utils import apply_filter, resize_by_resolution, apply_dithering
+from app.utils import apply_dithering, apply_filter, resize_by_resolution
 
 
 def test_resize_by_resolution(sample_image):
