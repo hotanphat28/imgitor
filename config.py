@@ -14,6 +14,7 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024 # Limit test uploads as well
+    API_KEY = "test-secret-key"
 
 config = {
     'development': DevelopmentConfig,

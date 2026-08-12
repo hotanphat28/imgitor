@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Formatted entire backend with `ruff`.
 
 ### Fixed
+- **Security**: Fixed a cryptographic timing attack vulnerability in API authentication by using `secrets.compare_digest`.
+- **Security**: Hardened API by returning a 503 error if the API key is not configured in the `.env` file, removing the insecure default fallback.
+- **Testing**: Fixed failing API tests caused by the new security restrictions by configuring a test API key.
 - Fixed an import sorting lint error in `test_utils.py` that was causing GitHub Actions checks to fail.
 
 ## [2.1.0] - 2026-07-15

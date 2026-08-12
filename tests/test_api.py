@@ -10,14 +10,14 @@ def test_api_process_unauthorized(client):
 
 
 def test_api_process_no_image(client):
-    headers = {"Authorization": "Bearer imgitor-secret-key-123"}
+    headers = {"Authorization": "Bearer test-secret-key"}
     response = client.post("/api/v1/process", headers=headers)
     assert response.status_code == 400
     assert b"No image provided" in response.data
 
 
 def test_api_process_empty_image(client):
-    headers = {"Authorization": "Bearer imgitor-secret-key-123"}
+    headers = {"Authorization": "Bearer test-secret-key"}
     data = {"image": (io.BytesIO(b""), "")}
     response = client.post(
         "/api/v1/process",
@@ -30,7 +30,7 @@ def test_api_process_empty_image(client):
 
 
 def test_api_process_no_mode(client, sample_image):
-    headers = {"Authorization": "Bearer imgitor-secret-key-123"}
+    headers = {"Authorization": "Bearer test-secret-key"}
 
     img_byte_arr = io.BytesIO()
     sample_image.save(img_byte_arr, format="PNG")
@@ -48,7 +48,7 @@ def test_api_process_no_mode(client, sample_image):
 
 
 def test_api_process_valid(client, sample_image):
-    headers = {"Authorization": "Bearer imgitor-secret-key-123"}
+    headers = {"Authorization": "Bearer test-secret-key"}
 
     img_byte_arr = io.BytesIO()
     sample_image.save(img_byte_arr, format="PNG")
