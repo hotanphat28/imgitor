@@ -124,7 +124,7 @@ def upload_file():
             img = Image.open(img_path)
 
             # FAST PREVIEW: Downscale image to max 800x800 to drastically speed up processing and network transfer
-            if mode in ["adjust", "filter", "watermark"]:
+            if mode in ["adjust", "filter", "watermark", "dither"]:
                 if mode == "watermark":
                     # For watermark, coordinate math might get tricky if we downscale before processing.
                     # We will downscale AFTER processing for watermark, but BEFORE for adjust/filter.

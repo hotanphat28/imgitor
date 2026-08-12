@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- **Dithering Effect**: Added a 1-bit retro dithering tool with options for Floyd-Steinberg, Bayer, and Atkinson algorithms via the `dithering` package.
 - Created `CONTEXT.md` to serve as a comprehensive documentation of project context, merging information from `AGENTS.md` and `README.md`.
 - **Quality & CI/CD**: Added GitHub Actions workflow (`ci.yml`) for automated testing, linting (`ruff`), and security scanning (`bandit`).
 - **Test Coverage**: Added comprehensive backend unit tests (`test_api.py`, `test_routes.py`), increasing backend coverage to >60%.

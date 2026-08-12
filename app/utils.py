@@ -140,6 +140,10 @@ def process_image_core(img, mode, params, wm_image_stream=None):
         sharpness = float(params.get("sharpness", 1.0))
         processed_img = adjust_image(img, brightness, contrast, saturation, sharpness)
 
+    elif mode == "dither":
+        dither_method = params.get("dither_method", "none")
+        processed_img = apply_dithering(img, dither_method)
+
     elif mode == "remove_bg":
         processed_img = remove_background(img)
 
@@ -216,7 +220,12 @@ def process_image_pipeline(img, params, wm_image_stream=None):
     except (ValueError, TypeError):
         pass  # Invalid adjust parameters, skip
 
-    # 4. Watermark
+    # 4. Dithering
+    dither_method = params.get("dither_method", "none")
+    if dither_method and dither_method != "none":
+        processed_img = apply_dithering(processed_img, dither_method)
+
+    # 5. Watermark
     wm_text = params.get("wm_text")
     if wm_text or wm_image_stream:
         color = params.get("wm_color", "#ffffff")
@@ -299,6 +308,23 @@ def apply_filter(img, filter_type):
             pixels[x, y] = (min(tr, 255), min(tg, 255), min(tb, 255))
 
     return img
+
+
+def apply_dithering(img, method):
+    """Applies dithering effect to the image using a 1-bit B&W palette."""
+    if not method or method == "none":
+        return img
+
+    import dithering
+    
+    img = img.convert("RGB")
+    bw_palette = [(0, 0, 0), (255, 255, 255)]
+    
+    try:
+        return dithering.dither(img, method, palette=bw_palette)
+    except Exception as e:
+        print(f"Error applying dithering: {e}")
+        return img
 
 
 def remove_background(img):

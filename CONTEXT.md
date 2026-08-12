@@ -27,7 +27,8 @@ Imgitor is a browser-based image processing tool created with Flask. It allows u
     3. **Filters**: Apply Grayscale, Sepia, Blue Tone, Warm Tone, Invert, Posterize, High Contrast, or Vintage using an interactive visual thumbnail grid.
     4. **Adjustments**: Fine-tune Brightness, Contrast, Saturation, and Sharpness.
     5. **Watermark**: Protect images with text (opacity/color) or image logos.
-    6. **Remove Background**: AI-powered background removal.
+    6. **Dithering**: Apply retro 1-bit dithering effects (Floyd-Steinberg, Bayer, Atkinson).
+    7. **Remove Background**: AI-powered background removal.
 - **Format Conversion**: Choose output format or let the app automatically decide to preserve transparency.
 
 ## Testing

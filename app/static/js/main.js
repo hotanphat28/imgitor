@@ -359,6 +359,7 @@ class ImgitorApp {
         document.querySelector(`input[name="mode"][value="${newMode}"]`).checked = true;
 
         document.getElementById('filter-inputs').style.display = (newMode === 'filter') ? 'block' : 'none';
+        document.getElementById('dither-inputs').style.display = (newMode === 'dither') ? 'block' : 'none';
         document.getElementById('crop-inputs').style.display = (newMode === 'crop') ? 'block' : 'none';
         document.getElementById('crop-bottom-toolbar').style.display = (newMode === 'crop') ? 'flex' : 'none';
         document.getElementById('adjust-inputs').style.display = (newMode === 'adjust') ? 'block' : 'none';
@@ -371,8 +372,13 @@ class ImgitorApp {
         }
 
         if (newMode === 'filter' && document.getElementById('filter_type').value === 'none') {
-            document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
-            document.querySelector('.filter-thumb[onclick*="none"]')?.classList.add('active');
+            document.querySelectorAll('.filter-thumb:not(.dither-thumb)').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-thumb:not(.dither-thumb)[onclick*="none"]')?.classList.add('active');
+        }
+
+        if (newMode === 'dither' && document.getElementById('dither_method').value === 'none') {
+            document.querySelectorAll('.dither-thumb').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.dither-thumb[onclick*="none"]')?.classList.add('active');
         }
         
         if (newMode !== 'crop') {
@@ -388,6 +394,18 @@ class ImgitorApp {
         let prettyName = filterName.charAt(0).toUpperCase() + filterName.slice(1).replace('_', ' ');
         if (filterName === 'none') prettyName = 'None';
         this.saveState('Applied Filter: ' + prettyName);
+        
+        window.livePreview();
+    }
+
+    selectDither(methodName, btnElement) {
+        document.getElementById('dither_method').value = methodName;
+        document.querySelectorAll('.dither-thumb').forEach(btn => btn.classList.remove('active'));
+        if (btnElement) btnElement.classList.add('active');
+        
+        let prettyName = methodName.charAt(0).toUpperCase() + methodName.slice(1).replace('_', ' ');
+        if (methodName === 'none') prettyName = 'None';
+        this.saveState('Applied Dithering: ' + prettyName);
         
         window.livePreview();
     }
@@ -471,6 +489,7 @@ class ImgitorApp {
         return {
             current_step: this.state.currentStep,
             filter_type: document.getElementById('filter_type')?.value || 'none',
+            dither_method: document.getElementById('dither_method')?.value || 'none',
             brightness: document.querySelector('input[name="brightness"]')?.value || '1.0',
             contrast: document.querySelector('input[name="contrast"]')?.value || '1.0',
             saturation: document.querySelector('input[name="saturation"]')?.value || '1.0',
@@ -486,9 +505,14 @@ class ImgitorApp {
         document.getElementById('current_step').value = stateObj.current_step;
         
         if (document.getElementById('filter_type')) document.getElementById('filter_type').value = stateObj.filter_type;
-        document.querySelectorAll('.filter-thumb').forEach(btn => btn.classList.remove('active'));
-        const activeFilterBtn = document.querySelector(`.filter-thumb[onclick*="'${stateObj.filter_type}'"]`);
+        document.querySelectorAll('.filter-thumb:not(.dither-thumb)').forEach(btn => btn.classList.remove('active'));
+        const activeFilterBtn = document.querySelector(`.filter-thumb:not(.dither-thumb)[onclick*="'${stateObj.filter_type}'"]`);
         if (activeFilterBtn) activeFilterBtn.classList.add('active');
+
+        if (document.getElementById('dither_method')) document.getElementById('dither_method').value = stateObj.dither_method;
+        document.querySelectorAll('.dither-thumb').forEach(btn => btn.classList.remove('active'));
+        const activeDitherBtn = document.querySelector(`.dither-thumb[onclick*="'${stateObj.dither_method}'"]`);
+        if (activeDitherBtn) activeDitherBtn.classList.add('active');
 
         const sliders = ['brightness', 'contrast', 'saturation', 'sharpness', 'wm_text', 'wm_color', 'wm_opacity'];
         sliders.forEach(key => {
@@ -678,6 +702,7 @@ function debounce(func, wait) {
 // Bind global functions to app methods so existing HTML handlers keep working
 window.toggleInputs = () => app.toggleInputs();
 window.selectFilter = (name, el) => app.selectFilter(name, el);
+window.selectDither = (name, el) => app.selectDither(name, el);
 window.handleFileUpload = (el) => app.handleFileUpload(el);
 window.applyEdit = () => app.applyEdit();
 window.undoStep = () => app.undoStep();

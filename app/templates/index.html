@@ -44,6 +44,11 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 3-6 3-3 6-3-6-6-3 6-3z"></path></svg>
                 </label>
 
+                <input type="radio" id="dither" name="mode" value="dither" onchange="toggleInputs()">
+                <label for="dither" class="tool-btn" title="Dithering" aria-label="Dithering Tool">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="4" height="4"></rect><rect x="17" y="3" width="4" height="4"></rect><rect x="10" y="10" width="4" height="4"></rect><rect x="3" y="17" width="4" height="4"></rect><rect x="17" y="17" width="4" height="4"></rect></svg>
+                </label>
+
                 <input type="radio" id="adjust" name="mode" value="adjust" onchange="toggleInputs()">
                 <label for="adjust" class="tool-btn" title="Adjustments" aria-label="Adjustments Tool">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -201,6 +206,18 @@
                             <button type="button" class="filter-thumb" onclick="selectFilter('posterize', this)">Poster</button>
                             <button type="button" class="filter-thumb" onclick="selectFilter('high_contrast', this)">Contrast</button>
                             <button type="button" class="filter-thumb" onclick="selectFilter('vintage', this)">Vintage</button>
+                        </div>
+                    </div>
+
+                    <div id="dither-inputs" style="display:none;">
+                        <label class="setting-label">1-Bit Retro Dithering</label>
+                        <input type="hidden" name="dither_method" id="dither_method" value="none">
+                        
+                        <div class="filter-thumbnails">
+                            <button type="button" class="filter-thumb dither-thumb active" onclick="selectDither('none', this)">None</button>
+                            <button type="button" class="filter-thumb dither-thumb" onclick="selectDither('floyd_steinberg', this)">Floyd</button>
+                            <button type="button" class="filter-thumb dither-thumb" onclick="selectDither('bayer4x4', this)">Bayer</button>
+                            <button type="button" class="filter-thumb dither-thumb" onclick="selectDither('atkinson', this)">Atkinson</button>
                         </div>
                     </div>
 

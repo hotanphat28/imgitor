@@ -1,4 +1,4 @@
-from app.utils import apply_filter, resize_by_resolution
+from app.utils import apply_filter, resize_by_resolution, apply_dithering
 
 
 def test_resize_by_resolution(sample_image):
@@ -16,3 +16,13 @@ def test_apply_filter_sepia(sample_image):
     # Should still be RGB, but modified pixels
     assert filtered.mode == "RGB"
     assert filtered.size == (100, 100)
+
+def test_apply_dithering(sample_image):
+    dithered = apply_dithering(sample_image, "floyd_steinberg")
+    # Should be RGB with modified pixels
+    assert dithered.mode == "RGB"
+    assert dithered.size == (100, 100)
+    
+    dithered_bayer = apply_dithering(sample_image, "bayer4x4")
+    assert dithered_bayer.mode == "RGB"
+    assert dithered_bayer.size == (100, 100)
