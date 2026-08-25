@@ -124,13 +124,13 @@ def upload_file():
             img = Image.open(img_path)
 
             # FAST PREVIEW: Downscale image to max 800x800 to drastically speed up processing and network transfer
-            if mode in ["adjust", "filter", "watermark", "dither"]:
+            if mode in ["adjust", "filter", "watermark", "dither", "halftone"]:
                 if mode == "watermark":
                     # For watermark, coordinate math might get tricky if we downscale before processing.
                     # We will downscale AFTER processing for watermark, but BEFORE for adjust/filter.
                     pass
                 else:
-                    img.thumbnail((800, 800), Image.Resampling.NEAREST)
+                    img.thumbnail((800, 800), Image.Resampling.BILINEAR)
 
             wm_image_stream = None
             if "wm_image" in request.files and request.files["wm_image"].filename != "":
@@ -148,7 +148,7 @@ def upload_file():
 
             # If watermark, we process at full resolution then downscale the result for fast network transfer
             if mode == "watermark":
-                processed_img.thumbnail((800, 800), Image.Resampling.NEAREST)
+                processed_img.thumbnail((800, 800), Image.Resampling.BILINEAR)
 
             buffer = io.BytesIO()
             if processed_img.mode in ("RGBA", "LA", "P"):

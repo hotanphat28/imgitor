@@ -27,6 +27,7 @@ A browser-based image processing tool created with Flask. It allows you to:
        
        [🎥 Watch Feature Showcase: Dithering](features-videos/feature-dithering-effects.mp4)
     7. **Remove Background**: AI-powered background removal.
+    8. **Halftone**: Apply customizable halftone effects with dedicated controls for dot size, angle, and shape.
 - **Format Conversion**: Choose output format or let the app automatically decide to preserve transparency.
 - **Security & Performance**: Rate limiting prevents abuse, while local caching ensures lightning-fast undo/redo.
 - **Modular Design**: Scalable Flask application structure using blueprints and background threads.

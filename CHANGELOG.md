@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- **Halftone Tool**: Elevated the Halftone effect from a filter into a dedicated tool with advanced controls for dot size, angle, and shape (Round, Square, Line).
 - **API Documentation**: Added comprehensive `API.md` to document the `/api/v1/process` RESTful endpoint, and linked it in the README.
 - **Documentation**: Embedded feature showcase videos for Filters and Dithering into the README.
 - **Dithering Effect**: Added a 1-bit retro dithering tool with options for Floyd-Steinberg, Bayer, and Atkinson algorithms via the `dithering` package.
@@ -19,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Formatted entire backend with `ruff`.
 
 ### Fixed
+- **Live Preview Artifacts**: Fixed a critical aliasing issue where the fast preview downsampler (`NEAREST`) caused severe moiré patterns that mistakenly looked like a halftone effect on high-resolution images. Upgraded the engine to `BILINEAR` interpolation.
+- **Halftone Reset State**: Fixed a bug where clicking the "Reset" button failed to turn off the Halftone effect. Added a "None" shape option to cleanly decouple the tool's state.
 - **Security**: Fixed a cryptographic timing attack vulnerability in API authentication by using `secrets.compare_digest`.
 - **Security**: Hardened API by returning a 503 error if the API key is not configured in the `.env` file, removing the insecure default fallback.
 - **Testing**: Fixed failing API tests caused by the new security restrictions by configuring a test API key.

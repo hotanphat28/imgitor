@@ -144,6 +144,15 @@ def process_image_core(img, mode, params, wm_image_stream=None):
         dither_method = params.get("dither_method", "none")
         processed_img = apply_dithering(img, dither_method)
 
+    elif mode == "halftone":
+        shape = params.get("halftone_shape", "none")
+        if shape != "none":
+            sample = int(float(params.get("halftone_size", 10)))
+            angle = int(float(params.get("halftone_angle", 0)))
+            processed_img = apply_halftone(img, sample, angle, shape)
+        else:
+            processed_img = img
+
     elif mode == "remove_bg":
         processed_img = remove_background(img)
 
@@ -224,6 +233,18 @@ def process_image_pipeline(img, params, wm_image_stream=None):
     dither_method = params.get("dither_method", "none")
     if dither_method and dither_method != "none":
         processed_img = apply_dithering(processed_img, dither_method)
+
+    # 4.5 Halftone
+    try:
+        shape = params.get("halftone_shape", "none")
+        if shape != "none":
+            halftone_size = params.get("halftone_size")
+            if halftone_size:
+                sample = int(float(halftone_size))
+                angle = int(float(params.get("halftone_angle", 0)))
+                processed_img = apply_halftone(processed_img, sample, angle, shape)
+    except (ValueError, TypeError):
+        pass
 
     # 5. Watermark
     wm_text = params.get("wm_text")
@@ -308,6 +329,69 @@ def apply_filter(img, filter_type):
             pixels[x, y] = (min(tr, 255), min(tg, 255), min(tb, 255))
 
     return img
+
+
+def apply_halftone(img, sample=10, angle=0, shape="round"):
+    """Applies a trendy halftone effect to the image."""
+    img_gray = img.convert("L")
+    
+    if angle != 0:
+        img_gray = img_gray.rotate(angle, expand=True, resample=Image.Resampling.BICUBIC)
+    
+    w, h = img_gray.size
+    small_w = (w + sample - 1) // sample
+    small_h = (h + sample - 1) // sample
+    
+    # Downscale the image to average the blocks
+    img_small = img_gray.resize((small_w, small_h), Image.Resampling.BILINEAR)
+    pixels = img_small.load()
+    
+    # Create the output image (white background)
+    output_img = Image.new("L", (w, h), color=255)
+    from PIL import ImageDraw
+    draw = ImageDraw.Draw(output_img)
+    
+    # Draw shapes
+    for x in range(small_w):
+        for y in range(small_h):
+            brightness = pixels[x, y]
+            size_factor = (255 - brightness) / 255.0
+            
+            if size_factor > 0:
+                center_x = x * sample + sample / 2.0
+                center_y = y * sample + sample / 2.0
+                
+                if shape == "line":
+                    thickness = size_factor * sample
+                    left = center_x - thickness / 2.0
+                    right = center_x + thickness / 2.0
+                    top = y * sample
+                    bottom = (y + 1) * sample
+                    draw.rectangle([left, top, right, bottom], fill=0)
+                else:
+                    radius = size_factor * (sample / 2.0)
+                    if shape == "square":
+                        radius = size_factor * (sample / 1.414)  # Make square visually cover same area
+                    
+                    left = center_x - radius
+                    top = center_y - radius
+                    right = center_x + radius
+                    bottom = center_y + radius
+                    
+                    if shape == "square":
+                        draw.rectangle([left, top, right, bottom], fill=0)
+                    else:
+                        draw.ellipse([left, top, right, bottom], fill=0)
+                        
+    if angle != 0:
+        output_img = output_img.rotate(-angle, expand=False, resample=Image.Resampling.BICUBIC)
+        orig_w, orig_h = img.size
+        out_w, out_h = output_img.size
+        left = (out_w - orig_w) // 2
+        top = (out_h - orig_h) // 2
+        output_img = output_img.crop((left, top, left + orig_w, top + orig_h))
+    
+    return output_img.convert("RGB")
 
 
 def apply_dithering(img, method):

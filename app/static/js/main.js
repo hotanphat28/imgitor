@@ -354,6 +354,7 @@ class ImgitorApp {
 
         document.getElementById('filter-inputs').style.display = (newMode === 'filter') ? 'block' : 'none';
         document.getElementById('dither-inputs').style.display = (newMode === 'dither') ? 'block' : 'none';
+        document.getElementById('halftone-inputs').style.display = (newMode === 'halftone') ? 'block' : 'none';
         document.getElementById('crop-inputs').style.display = (newMode === 'crop') ? 'block' : 'none';
         document.getElementById('crop-bottom-toolbar').style.display = (newMode === 'crop') ? 'flex' : 'none';
         document.getElementById('adjust-inputs').style.display = (newMode === 'adjust') ? 'block' : 'none';
@@ -400,6 +401,17 @@ class ImgitorApp {
         let prettyName = methodName.charAt(0).toUpperCase() + methodName.slice(1).replace('_', ' ');
         if (methodName === 'none') prettyName = 'None';
         this.saveState('Applied Dithering: ' + prettyName);
+        
+        window.livePreview();
+    }
+
+    selectHalftoneShape(shape, btnElement) {
+        document.getElementById('halftone_shape').value = shape;
+        document.querySelectorAll('#halftone-inputs .filter-thumb').forEach(btn => btn.classList.remove('active'));
+        if (btnElement) btnElement.classList.add('active');
+        
+        let prettyName = shape.charAt(0).toUpperCase() + shape.slice(1);
+        this.saveState('Changed Halftone Shape to ' + prettyName);
         
         window.livePreview();
     }
@@ -484,6 +496,9 @@ class ImgitorApp {
             current_step: this.state.currentStep,
             filter_type: document.getElementById('filter_type')?.value || 'none',
             dither_method: document.getElementById('dither_method')?.value || 'none',
+            halftone_shape: document.getElementById('halftone_shape')?.value || 'round',
+            halftone_size: document.querySelector('input[name="halftone_size"]')?.value || '10',
+            halftone_angle: document.querySelector('input[name="halftone_angle"]')?.value || '0',
             brightness: document.querySelector('input[name="brightness"]')?.value || '1.0',
             contrast: document.querySelector('input[name="contrast"]')?.value || '1.0',
             saturation: document.querySelector('input[name="saturation"]')?.value || '1.0',
@@ -508,7 +523,12 @@ class ImgitorApp {
         const activeDitherBtn = document.querySelector(`.dither-thumb[onclick*="'${stateObj.dither_method}'"]`);
         if (activeDitherBtn) activeDitherBtn.classList.add('active');
 
-        const sliders = ['brightness', 'contrast', 'saturation', 'sharpness', 'wm_text', 'wm_color', 'wm_opacity'];
+        if (document.getElementById('halftone_shape')) document.getElementById('halftone_shape').value = stateObj.halftone_shape;
+        document.querySelectorAll('#halftone-inputs .filter-thumb').forEach(btn => btn.classList.remove('active'));
+        const activeShapeBtn = document.querySelector(`#halftone-inputs .filter-thumb[onclick*="'${stateObj.halftone_shape}'"]`);
+        if (activeShapeBtn) activeShapeBtn.classList.add('active');
+
+        const sliders = ['brightness', 'contrast', 'saturation', 'sharpness', 'wm_text', 'wm_color', 'wm_opacity', 'halftone_size', 'halftone_angle'];
         sliders.forEach(key => {
             const input = document.querySelector(`input[name="${key}"]`);
             if (input) {
@@ -719,6 +739,7 @@ function debounce(func, wait) {
 window.toggleInputs = () => app.toggleInputs();
 window.selectFilter = (name, el) => app.selectFilter(name, el);
 window.selectDither = (name, el) => app.selectDither(name, el);
+window.selectHalftoneShape = (name, el) => app.selectHalftoneShape(name, el);
 window.handleFileUpload = (el) => app.handleFileUpload(el);
 window.applyEdit = () => app.applyEdit();
 window.undoStep = () => app.undoStep();

@@ -29,6 +29,7 @@ Imgitor is a browser-based image processing tool created with Flask. It allows u
     5. **Watermark**: Protect images with text (opacity/color) or image logos.
     6. **Dithering**: Apply retro 1-bit dithering effects (Floyd-Steinberg, Bayer, Atkinson).
     7. **Remove Background**: AI-powered background removal.
+    8. **Halftone**: Apply customizable halftone effects with dedicated controls for dot size, angle, and shape.
 - **Format Conversion**: Choose output format or let the app automatically decide to preserve transparency.
 
 ## Testing

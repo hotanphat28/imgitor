@@ -54,6 +54,11 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </label>
 
+                <input type="radio" id="halftone" name="mode" value="halftone" onchange="toggleInputs()">
+                <label for="halftone" class="tool-btn" title="Halftone" aria-label="Halftone Tool">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><circle cx="6" cy="12" r="2"></circle><circle cx="18" cy="12" r="2"></circle></svg>
+                </label>
+
                 <input type="radio" id="watermark" name="mode" value="watermark" onchange="toggleInputs()">
                 <label for="watermark" class="tool-btn" title="Watermark" aria-label="Watermark Tool">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"></path><path d="M9 20h6"></path><path d="M12 4v16"></path></svg>
@@ -212,6 +217,33 @@
                             <button type="button" class="filter-thumb dither-thumb" onclick="selectDither('floyd_steinberg', this)">Floyd</button>
                             <button type="button" class="filter-thumb dither-thumb" onclick="selectDither('bayer4x4', this)">Bayer</button>
                             <button type="button" class="filter-thumb dither-thumb" onclick="selectDither('atkinson', this)">Atkinson</button>
+                        </div>
+                    </div>
+
+                    <div id="halftone-inputs" style="display:none;" class="slider-group">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <label>Dot Size</label>
+                                <span id="val-ht-size" class="val-badge">10</span>
+                            </div>
+                            <input type="range" name="halftone_size" min="2" max="50" step="1" value="10" oninput="document.getElementById('val-ht-size').innerText=this.value; livePreview()" onchange="app.saveState('Changed Halftone Size')">
+                        </div>
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <label>Angle</label>
+                                <span id="val-ht-angle" class="val-badge">0&deg;</span>
+                            </div>
+                            <input type="range" name="halftone_angle" min="0" max="90" step="1" value="0" oninput="document.getElementById('val-ht-angle').innerText=this.value+'&deg;'; livePreview()" onchange="app.saveState('Changed Halftone Angle')">
+                        </div>
+                        <div class="slider-item" style="margin-top: 1rem;">
+                            <label class="setting-label">Shape</label>
+                            <input type="hidden" name="halftone_shape" id="halftone_shape" value="none">
+                            <div class="filter-thumbnails">
+                                <button type="button" class="filter-thumb active" onclick="selectHalftoneShape('none', this)">None</button>
+                                <button type="button" class="filter-thumb" onclick="selectHalftoneShape('round', this)">Round</button>
+                                <button type="button" class="filter-thumb" onclick="selectHalftoneShape('square', this)">Square</button>
+                                <button type="button" class="filter-thumb" onclick="selectHalftoneShape('line', this)">Line</button>
+                            </div>
                         </div>
                     </div>
 

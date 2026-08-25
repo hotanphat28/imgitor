@@ -73,3 +73,32 @@ def test_api_process_valid(client, sample_image):
     # Verify the returned image is grayscale
     result_img = Image.open(io.BytesIO(response.data))
     assert result_img.mode == "L"
+
+
+def test_api_process_halftone(client, sample_image):
+    headers = {"Authorization": "Bearer test-secret-key"}
+
+    img_byte_arr = io.BytesIO()
+    sample_image.save(img_byte_arr, format="PNG")
+    img_byte_arr.seek(0)
+
+    data = {
+        "image": (img_byte_arr, "test.png"),
+        "mode": "halftone",
+        "halftone_size": "15",
+        "halftone_angle": "45",
+        "halftone_shape": "line",
+        "save_format": "PNG",
+    }
+
+    response = client.post(
+        "/api/v1/process",
+        headers=headers,
+        data=data,
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 200
+    assert response.mimetype == "image/png"
+
+    result_img = Image.open(io.BytesIO(response.data))
+    assert result_img.mode in ("RGB", "RGBA")

@@ -1,4 +1,9 @@
-from app.utils import apply_dithering, apply_filter, resize_by_resolution
+from app.utils import (
+    apply_dithering,
+    apply_filter,
+    apply_halftone,
+    resize_by_resolution,
+)
 
 
 def test_resize_by_resolution(sample_image):
@@ -26,3 +31,9 @@ def test_apply_dithering(sample_image):
     dithered_bayer = apply_dithering(sample_image, "bayer4x4")
     assert dithered_bayer.mode == "RGB"
     assert dithered_bayer.size == (100, 100)
+
+
+def test_apply_halftone(sample_image):
+    halftoned = apply_halftone(sample_image, sample=10, angle=45, shape="square")
+    assert halftoned.mode == "RGB"
+    assert halftoned.size == (100, 100)
