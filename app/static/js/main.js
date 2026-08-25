@@ -231,12 +231,6 @@ class ImgitorApp {
             if (aspectSelector && aspectDropdown && !aspectSelector.contains(event.target)) {
                 aspectDropdown.style.display = 'none';
             }
-            
-            const historyMenu = document.getElementById('history-dropdown-menu');
-            const historyBtn = historyMenu?.previousElementSibling;
-            if (historyMenu && historyBtn && !historyMenu.contains(event.target) && !historyBtn.contains(event.target)) {
-                historyMenu.classList.remove('active');
-            }
         });
     }
 
@@ -544,6 +538,10 @@ class ImgitorApp {
         this.state.history.push(state);
         this.state.historyIndex = this.state.history.length - 1;
         this.updateUndoRedo();
+        
+        if (this.state.history.length > 1) { // Don't toast on initial load
+            this.showToast(actionName);
+        }
     }
 
     jumpToState(index) {
@@ -591,7 +589,7 @@ class ImgitorApp {
     }
 
     renderHistoryList() {
-        const container = document.getElementById('history-dropdown-list');
+        const container = document.getElementById('history-drawer-list');
         if (!container) return;
         
         container.innerHTML = '';
@@ -606,7 +604,7 @@ class ImgitorApp {
             
             li.onclick = () => {
                 this.jumpToState(i);
-                document.getElementById('history-dropdown-menu').classList.remove('active');
+                // Optionally close drawer on click: window.toggleHistoryDrawer();
             };
             
             li.innerHTML = `
@@ -615,6 +613,24 @@ class ImgitorApp {
             `;
             container.appendChild(li);
         }
+    }
+
+    showToast(message) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerText = message;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('hide');
+            toast.addEventListener('animationend', () => {
+                toast.remove();
+            });
+        }, 3000);
     }
 
     removeBackground() {
@@ -727,6 +743,9 @@ window.toggleAspectDropdown = () => {
     d.style.display = d.style.display === 'none' ? 'flex' : 'none';
 };
 window.closeMobileDrawer = () => app.closeMobileDrawer();
+window.toggleHistoryDrawer = () => {
+    document.getElementById('history-drawer').classList.toggle('active');
+};
 
 window.saveResize = () => {
     const form = document.getElementById('main-form');

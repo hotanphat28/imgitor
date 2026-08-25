@@ -33,6 +33,7 @@
     --font-heading: var(--font-display);
     --danger-color: var(--status-error);
     --border-width: 3px;
+    --neu-shadow: 6px 6px 0px var(--border-color);
 }
 
 body.dark-mode {
@@ -139,6 +140,7 @@ body.app-body {
     text-decoration: none;
     border-bottom: var(--border-width) solid var(--border-color);
     background: var(--sidebar-bg);
+    transition: transform 0.1s, box-shadow 0.1s;
 }
 
 .nav-btn svg, .tool-btn svg {
@@ -152,6 +154,11 @@ body.app-body {
 }
 
 .nav-btn.active {
+    background-color: var(--text-primary);
+    color: var(--bg-color);
+}
+
+.nav-btn:active, .tool-btn:active {
     background-color: var(--text-primary);
     color: var(--bg-color);
 }
@@ -204,11 +211,18 @@ body.app-body {
     border: var(--border-width) solid var(--border-color);
     background: var(--sidebar-bg);
     cursor: pointer;
+    box-shadow: var(--neu-shadow);
+    transition: transform 0.1s, box-shadow 0.1s;
 }
 
 .upload-area:hover, .upload-area.drag-active {
     background: var(--text-primary);
     color: var(--bg-color);
+}
+
+.upload-area:active {
+    transform: translate(6px, 6px);
+    box-shadow: 0px 0px 0px var(--border-color);
 }
 
 .upload-area:hover .icon-container, .upload-area:hover .upload-subtext {
@@ -285,6 +299,10 @@ body.app-body {
     justify-content: center;
     align-items: center;
     font-weight: bold;
+    box-shadow: 4px 4px 0px var(--border-color);
+    transition: transform 0.1s, box-shadow 0.1s;
+    margin-right: 4px;
+    margin-bottom: 4px;
 }
 .icon-btn:last-child {
     border-right: none;
@@ -293,6 +311,11 @@ body.app-body {
 .icon-btn:not(:disabled):hover {
     background: var(--text-primary);
     color: var(--bg-color);
+}
+
+.icon-btn:not(:disabled):active {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px var(--border-color);
 }
 
 .icon-btn:disabled {
@@ -316,11 +339,18 @@ body.app-body {
     align-items: center;
     gap: 8px;
     text-transform: uppercase;
+    box-shadow: var(--neu-shadow);
+    transition: transform 0.1s, box-shadow 0.1s;
 }
 
 .primary-btn:hover {
     background: var(--bg-color);
     color: var(--text-primary);
+}
+
+.primary-btn:active {
+    transform: translate(6px, 6px);
+    box-shadow: 0px 0px 0px var(--border-color);
 }
 
 .primary-btn svg { width: 18px; height: 18px; }
@@ -523,11 +553,20 @@ input[type=range]::-webkit-slider-thumb {
     align-items: center;
     gap: 8px;
     text-transform: uppercase;
+    box-shadow: var(--neu-shadow);
+    transition: transform 0.1s, box-shadow 0.1s;
+    margin-bottom: 6px;
+    margin-right: 6px;
 }
 
 .download-btn:hover {
     background: var(--bg-color);
     color: var(--text-primary);
+}
+
+.download-btn:active {
+    transform: translate(6px, 6px);
+    box-shadow: 0px 0px 0px var(--border-color);
 }
 
 .download-btn svg { width: 18px; height: 18px; }
@@ -599,7 +638,7 @@ input[type=range]::-webkit-slider-thumb {
     width: 450px;
     max-width: 90%;
     color: var(--text-primary);
-    box-shadow: 10px 10px 0 var(--border-color);
+    box-shadow: var(--neu-shadow);
     display: flex;
     flex-direction: column;
 }
@@ -931,6 +970,18 @@ input[type=range]::-webkit-slider-thumb {
         height: 35px;
         padding: 4px;
     }
+
+    /* Enlarge Slider Touch Targets */
+    input[type=range]::-webkit-slider-thumb {
+        height: 36px;
+        width: 24px;
+        margin-top: -16px;
+    }
+    
+    .history-drawer {
+        width: 100%;
+        right: -100%;
+    }
 }
 
 
@@ -1041,72 +1092,151 @@ input[type=range]::-webkit-slider-thumb {
 .aspect-icon.r43 { height: 18px; width: 24px; }
 
 
-/* History Dropdown Menu */
-.history-dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 280px;
-    background: var(--bg-card);
-    border: 3px solid var(--border-color);
-    box-shadow: 6px 6px 0px var(--shadow-color);
-    z-index: 1000;
-    margin-top: 10px;
-    max-height: 400px;
-    overflow-y: auto;
-}
-.history-dropdown-menu.active {
-    display: block;
-}
-.dropdown-header {
-    padding: 1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    border-bottom: 3px solid var(--border-color);
-    background: var(--bg-page);
-    position: sticky;
+/* History Timeline Drawer */
+.history-drawer {
+    position: fixed;
     top: 0;
-    z-index: 2;
+    right: -400px;
+    width: 350px;
+    height: 100vh;
+    background: var(--sidebar-bg);
+    border-left: var(--border-width) solid var(--border-color);
+    box-shadow: -10px 0 0 var(--border-color);
+    z-index: 2000;
+    transition: right 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    display: flex;
+    flex-direction: column;
 }
-.history-dropdown-list {
+.history-drawer.active {
+    right: 0;
+}
+.drawer-header {
+    padding: 1.5rem;
+    border-bottom: var(--border-width) solid var(--border-color);
+    background: var(--text-primary);
+    color: var(--bg-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.drawer-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+.drawer-header .icon-btn {
+    width: 30px;
+    height: 30px;
+    border-color: var(--bg-color);
+    color: var(--text-primary);
+    background: var(--bg-color);
+    box-shadow: 2px 2px 0px var(--border-color);
+}
+.drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1.5rem 3rem 1.5rem;
+    background: var(--canvas-bg);
+}
+
+/* Timeline */
+.history-timeline {
     list-style: none;
     margin: 0;
     padding: 0;
+    position: relative;
+}
+.history-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 14px;
+    width: 4px;
+    background: var(--text-primary);
 }
 .history-item {
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-    border-bottom: 2px dashed var(--border-color);
+    position: relative;
+    padding-left: 2.5rem;
+    margin-bottom: 2rem;
     cursor: pointer;
-    transition: all 0.2s ease;
-    background: var(--bg-card);
 }
-.history-item:last-child {
-    border-bottom: none;
+.history-item::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    background: var(--bg-color);
+    border: 4px solid var(--text-primary);
+    border-radius: 50%;
+    z-index: 1;
+    transition: background 0.2s;
 }
-.history-item:hover {
-    background: var(--primary-color);
-    color: var(--bg-page);
+.history-item:hover::before {
+    background: var(--text-primary);
 }
-.history-item.active {
-    background: var(--text-color);
-    color: var(--bg-page);
-    border-left: 6px solid var(--primary-color);
+.history-item.active::before {
+    background: var(--text-primary);
+    box-shadow: 0 0 0 4px var(--canvas-bg), 0 0 0 7px var(--text-primary);
 }
 .history-item.future {
     opacity: 0.5;
-    background: var(--bg-page);
+}
+.history-item.future::before {
+    border-style: dashed;
 }
 .history-step {
+    display: block;
     font-size: 0.8rem;
     font-weight: 700;
-    margin-bottom: 0.25rem;
-    text-transform: uppercase;
+    color: var(--text-secondary);
 }
 .history-action {
+    display: block;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: var(--sidebar-bg);
+    border: var(--border-width) solid var(--border-color);
+    padding: 0.5rem 1rem;
+    margin-top: 0.5rem;
+    box-shadow: var(--neu-shadow);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+.history-item:hover .history-action {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--border-color);
+}
+
+/* Toast Notifications */
+.toast-top-right {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.toast {
+    background: var(--text-primary);
+    color: var(--bg-color);
+    border: var(--border-width) solid var(--border-color);
+    padding: 1rem 1.5rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    box-shadow: 6px 6px 0px var(--border-color);
+    animation: slideInDown 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes slideInDown {
+    from { transform: translateY(-150%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.toast.hide {
+    animation: slideOutUp 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes slideOutUp {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(-150%); opacity: 0; }
 }

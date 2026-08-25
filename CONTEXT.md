@@ -15,9 +15,9 @@ Imgitor is a browser-based image processing tool created with Flask. It allows u
 - **Non-Destructive Pipeline**: The backend dynamically processes an edit stack in memory, preventing compounding artifacts and allowing you to adjust sliders infinitely without degrading the original image quality.
 
 ## Design & UI Aesthetics
-- **Brutalist Theme:** Use a bold, high-contrast Brutalist UI. Prioritize accessibility and clear focus states. Includes a Dark/Light Mode toggle.
+- **Neubrutalist Theme:** Use a bold, high-contrast Refined Neubrutalist UI featuring hard drop shadows and physical button press states. Prioritize accessibility and clear focus states. Includes a Dark/Light Mode toggle.
 - **Theme Modes:** Must support both Dark and Light modes.
-- **Interactivity:** Sub-50ms live previews are expected. Images are dynamically downscaled during slider adjustments to maintain performance. A brutalist drop-down menu tracks every UI interaction for instant jump-back history.
+- **Interactivity:** Sub-50ms live previews are expected. Images are dynamically downscaled during slider adjustments to maintain performance. A sliding visual timeline drawer tracks every UI interaction for instant jump-back history, while auto-commit toast notifications provide real-time feedback.
 
 ## Features
 - **Batch Processing**: Upload multiple images, configure a bulk edit (e.g., watermark all images), and download them as a ZIP archive.

@@ -106,15 +106,9 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                         </button>
                         <div style="position: relative; display: inline-block;">
-                            <button type="button" class="icon-btn" onclick="document.getElementById('history-dropdown-menu').classList.toggle('active')" title="History" aria-label="History">
+                            <button type="button" class="icon-btn" onclick="toggleHistoryDrawer()" title="History" aria-label="History">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                             </button>
-                            <div id="history-dropdown-menu" class="history-dropdown-menu">
-                                <div class="dropdown-header">History</div>
-                                <ul id="history-dropdown-list" class="history-dropdown-list">
-                                    <!-- Populated by JS -->
-                                </ul>
-                            </div>
                         </div>
                         <button type="button" class="icon-btn danger" onclick="resetAll()" title="Reset All Edits" style="width: auto; padding: 0 1rem;" aria-label="Reset All Edits">
                             RESET
@@ -378,6 +372,24 @@
             </div>
         </div>
     </form>
+
+    <!-- History Timeline Drawer -->
+    <div id="history-drawer" class="history-drawer">
+        <div class="drawer-header">
+            <h3>Timeline</h3>
+            <button type="button" class="icon-btn" onclick="toggleHistoryDrawer()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <ul id="history-drawer-list" class="history-timeline">
+                <!-- Populated by JS -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-top-right"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

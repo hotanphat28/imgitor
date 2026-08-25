@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Testing**: Fixed failing API tests caused by the new security restrictions by configuring a test API key.
 - Fixed an import sorting lint error in `test_utils.py` that was causing GitHub Actions checks to fail.
 
+## [2.2.0] - 2026-08-25
+### Added
+- **Refined Neubrutalism**: Upgraded the UI from raw Brutalism to a polished Neubrutalist aesthetic featuring hard-edged drop shadows (`6px 6px`) and interactive, physical button press states.
+- **Auto-Commit Toast Notifications**: Added a non-intrusive toast notification system (sliding from the top-right) that confirms dynamically saved states, reinforcing the "no Apply button" workflow.
+- **Visual Undo/Redo Timeline**: Upgraded the basic history dropdown menu to a sleek, slide-out side drawer containing a visual connected timeline. This provides clearer context of past, present, and future states.
+- **Touch-Optimized Mobile Overhaul**: Introduced mobile-specific breakpoints (`<768px`) that anchor the settings panel as a swipe-friendly bottom sheet and enlarge slider touch targets for superior mobile ergonomics.
+
 ## [2.1.0] - 2026-07-15
 ### Added
 - **Interactive History Drop-Down Menu**: Replaced blind undo/redo clicking with a sleek, brutalist drop-down menu that chronicles every UI action. Users can click any item in the history list to instantly time-travel to past or future states.
