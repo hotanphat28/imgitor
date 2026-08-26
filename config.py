@@ -1,9 +1,10 @@
 import os
 
+
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard-to-guess-string'
-    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)) # 16 MB limit
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', '16777216')) # 16 MB limit
+    ALLOWED_EXTENSIONS = frozenset({'png', 'jpg', 'jpeg', 'webp', 'gif'})
 
 class DevelopmentConfig(Config):
     DEBUG = True

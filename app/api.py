@@ -6,7 +6,7 @@ from functools import wraps
 from flask import Blueprint, current_app, jsonify, request, send_file
 from PIL import Image
 
-from app.utils import process_image_core
+from app.utils import process_image_pipeline
 
 api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -14,7 +14,6 @@ api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 def require_api_key(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Require API_KEY to be set in .env
         api_key = current_app.config.get("API_KEY")
         if not api_key:
             return jsonify({"error": "API is disabled. API_KEY is not configured on the server."}), 503
@@ -37,21 +36,14 @@ def process_image():
     if not file or file.filename == "":
         return jsonify({"error": "Empty file provided"}), 400
 
-    mode = request.form.get("mode")
-    if not mode:
-        return jsonify({"error": "No 'mode' provided"}), 400
-
-    wm_image_stream = None
-    if "wm_image" in request.files and request.files["wm_image"].filename != "":
-        wm_image_stream = request.files["wm_image"].stream
-
     try:
         img = Image.open(file.stream)
 
-        processed_img = process_image_core(img, mode, request.form, wm_image_stream)
+        # We use pipeline to apply everything requested in the form
+        processed_img = process_image_pipeline(img, request.form)
 
         if not processed_img:
-            return jsonify({"error": f"Invalid mode requested: {mode}"}), 400
+            return jsonify({"error": "Failed to process image."}), 400
 
         save_format = request.form.get("save_format", "PNG").upper()
         if save_format == "AUTO":

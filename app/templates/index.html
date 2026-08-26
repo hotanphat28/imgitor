@@ -3,425 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Tool - Web</title>
+    <title>Retro Print Suite</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="app-body">
-    <form action="{{ url_for('main.upload_file') }}" method="POST" enctype="multipart/form-data" id="main-form" class="app-layout">
-        <input type="hidden" name="session_id" id="session_id" value="">
-        <input type="hidden" name="current_step" id="current_step" value="0">
-        <input type="hidden" name="action" id="form_action" value="init">
+<body class="kiosk-body">
+    <!-- Loader -->
+    <div id="loader-overlay">
+        <div class="kiosk-spinner"></div>
+        <p id="loader-text">PROCESSING...</p>
+    </div>
 
-        <!-- Sidebar Left (Tools & Nav) -->
-        <aside class="sidebar sidebar-left">
-            <div class="logo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-icon"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
-            </div>
-            
-            <div class="nav-links">
-                <a href="{{ url_for('main.index') }}" class="nav-btn active" title="Single Image" aria-label="Single Image Mode">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                </a>
-                <a href="{{ url_for('main.batch') }}" class="nav-btn" title="Batch Processing" aria-label="Batch Processing Mode">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-                </a>
-            </div>
-
-            <!-- Toolbar (only shown in edit mode) -->
-            <div id="toolbar-icons" class="toolbar-icons" style="display: none;">
-                <!-- Hidden radio for resolution mode used when saving from modal -->
-                <input type="radio" name="mode" value="resolution" style="display: none;">
-
-                <input type="radio" id="crop" name="mode" value="crop" checked onchange="toggleInputs()">
-                <label for="crop" class="tool-btn" title="Crop" aria-label="Crop Tool">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"></path></svg>
-                </label>
-
-                <input type="radio" id="filter" name="mode" value="filter" onchange="toggleInputs()">
-                <label for="filter" class="tool-btn" title="Filters" aria-label="Filter Tool">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 3-6 3-3 6-3-6-6-3 6-3z"></path></svg>
-                </label>
-
-                <input type="radio" id="dither" name="mode" value="dither" onchange="toggleInputs()">
-                <label for="dither" class="tool-btn" title="Dithering" aria-label="Dithering Tool">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="4" height="4"></rect><rect x="17" y="3" width="4" height="4"></rect><rect x="10" y="10" width="4" height="4"></rect><rect x="3" y="17" width="4" height="4"></rect><rect x="17" y="17" width="4" height="4"></rect></svg>
-                </label>
-
-                <input type="radio" id="adjust" name="mode" value="adjust" onchange="toggleInputs()">
-                <label for="adjust" class="tool-btn" title="Adjustments" aria-label="Adjustments Tool">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                </label>
-
-                <input type="radio" id="halftone" name="mode" value="halftone" onchange="toggleInputs()">
-                <label for="halftone" class="tool-btn" title="Halftone" aria-label="Halftone Tool">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><circle cx="6" cy="12" r="2"></circle><circle cx="18" cy="12" r="2"></circle></svg>
-                </label>
-
-                <input type="radio" id="watermark" name="mode" value="watermark" onchange="toggleInputs()">
-                <label for="watermark" class="tool-btn" title="Watermark" aria-label="Watermark Tool">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"></path><path d="M9 20h6"></path><path d="M12 4v16"></path></svg>
-                </label>
-            </div>
-
-            <div class="bottom-actions">
-                <label class="theme-switch" for="theme-checkbox" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">
-                    <input type="checkbox" id="theme-checkbox" onchange="toggleTheme(this.checked)" />
-                    <span class="slider round">
-                        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                    </span>
-                </label>
-            </div>
-        </aside>
-
-        <!-- Main Canvas Area -->
-        <main class="canvas-wrapper">
-            <div id="loader-overlay">
-                <div class="spinner"></div>
-                <p>Processing...</p>
-            </div>
-
-            <div id="step-1-upload" class="upload-container">
-                <div class="upload-area">
-                    <label for="image" class="upload-label">
-                        <div class="icon-container">
-                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                        </div>
-                        <span class="upload-text">Drag & Drop Image Here</span>
-                        <span class="upload-subtext">or click to browse from your computer</span>
-                        <input type="file" name="image" id="image" accept="image/*" required onchange="handleFileUpload(this)">
-                    </label>
+    <!-- Main Layout -->
+    <div class="kiosk-layout">
+        
+        <!-- Left: Canvas Area (65%) -->
+        <main class="kiosk-canvas-area" id="canvas-area">
+            <div class="upload-zone" id="upload-zone">
+                <input type="file" id="image-upload" accept="image/*" hidden>
+                <div class="upload-message">
+                    <h1>CLICK OR DRAG IMAGE</h1>
+                    <p>TO START THE PRESS</p>
                 </div>
             </div>
-
-            <div id="step-2-edit" class="preview-container" style="display: none;">
-                <div class="canvas-header">
-                    <div class="history-controls">
-                        <button type="button" class="icon-btn" onclick="removeBackground()" title="Remove Background" aria-label="Remove Background">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                        </button>
-                        <button type="button" class="icon-btn" onclick="openResizeModal()" title="Resize" aria-label="Open Resize Modal">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
-                        </button>
-                        <button type="button" class="icon-btn" onclick="undoStep()" id="undo-btn" disabled title="Undo" aria-label="Undo Edit">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
-                        </button>
-                        <button type="button" class="icon-btn" onclick="redoStep()" id="redo-btn" disabled title="Redo" aria-label="Redo Edit">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                        </button>
-                        <div style="position: relative; display: inline-block;">
-                            <button type="button" class="icon-btn" onclick="toggleHistoryDrawer()" title="History" aria-label="History">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            </button>
-                        </div>
-                        <button type="button" class="icon-btn danger" onclick="resetAll()" title="Reset All Edits" style="width: auto; padding: 0 1rem;" aria-label="Reset All Edits">
-                            RESET
-                        </button>
-                        <button type="button" class="icon-btn danger" onclick="startOver()" title="Start Over (New Image)" aria-label="Start Over">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                        </button>
-                    </div>
+            <div class="preview-zone" id="preview-zone" style="display: none;">
+                <div class="canvas-wrapper">
+                    <!-- We use an img for Cropper.js, and a canvas for Halftone/Dither preview -->
+                    <img id="source-image" src="" style="display: none;">
+                    <canvas id="live-canvas"></canvas>
                 </div>
-                <div class="canvas-body">
-                    <img id="preview-live" src="" alt="Live Preview">
-                </div>
-                
-                <!-- Floating Bottom Toolbar for Crop Feature -->
-                <div id="crop-bottom-toolbar" class="crop-toolbar" style="display: none;">
-                    <div class="crop-toolbar-angle">
-                        <span id="angle-val" class="angle-badge">0&deg;</span>
-                        <input type="range" id="crop-angle" min="-180" max="180" value="0" oninput="setCropAngle(this.value)">
-                    </div>
-                    <div class="crop-toolbar-actions">
-                        <button type="button" class="icon-btn" onclick="rotateCrop(-90)" title="Rotate Left">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                        </button>
-                        <button type="button" class="icon-btn" onclick="rotateCrop(90)" title="Rotate Right">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
-                        </button>
-                        
-                        <!-- Aspect Ratio Expander -->
-                        <div class="aspect-ratio-selector">
-                            <button type="button" class="primary-btn aspect-btn" onclick="toggleAspectDropdown()">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"></path></svg>
-                                <span id="current-aspect">Free</span>
-                            </button>
-                            <div class="aspect-dropdown" id="aspect-dropdown" style="display: none;">
-                                <div class="aspect-option" onclick="setCropAspectRatio('NaN', 'Free')"><div class="aspect-icon free"></div><span>Free</span></div>
-                                <div class="aspect-option" onclick="setCropAspectRatio('original', 'Original')"><div class="aspect-icon original"></div><span>Original</span></div>
-                                <div class="aspect-option" onclick="setCropAspectRatio('1', 'Square')"><div class="aspect-icon square"></div><span>Square</span></div>
-                                <div class="aspect-option" onclick="setCropAspectRatio('0.5625', '9:16')"><div class="aspect-icon r916"></div><span>9:16</span></div>
-                                <div class="aspect-option" onclick="setCropAspectRatio('1.77777777778', '16:9')"><div class="aspect-icon r169"></div><span>16:9</span></div>
-                                <div class="aspect-option" onclick="setCropAspectRatio('0.8', '4:5')"><div class="aspect-icon r45"></div><span>4:5</span></div>
-                                <div class="aspect-option" onclick="setCropAspectRatio('1.25', '5:4')"><div class="aspect-icon r54"></div><span>5:4</span></div>
-                                <div class="aspect-option" onclick="setCropAspectRatio('0.75', '3:4')"><div class="aspect-icon r34"></div><span>3:4</span></div>
-                                <div class="aspect-option" onclick="setCropAspectRatio('1.33333333333', '4:3')"><div class="aspect-icon r43"></div><span>4:3</span></div>
-                            </div>
-                        </div>
-
-                        <button type="button" class="icon-btn" onclick="flipCrop('horizontal')" title="Flip Horizontal">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"></path><path d="M3 12l4-4v8z"></path><path d="M21 12l-4-4v8z"></path></svg>
-                        </button>
-                        <button type="button" class="icon-btn" onclick="flipCrop('vertical')" title="Flip Vertical">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"></path><path d="M12 3l-4 4h8z"></path><path d="M12 21l-4-4h8z"></path></svg>
-                        </button>
-                    </div>
+                <!-- Floating Toolbar for Crop (only visible during crop) -->
+                <div class="crop-toolbar" id="crop-toolbar" style="display: none;">
+                    <button class="kiosk-btn sm" id="btn-crop-cancel">CANCEL</button>
+                    <button class="kiosk-btn sm primary" id="btn-crop-apply">APPLY CROP</button>
                 </div>
             </div>
         </main>
 
-        <div id="mobile-overlay" class="mobile-settings-overlay"></div>
-
-        <!-- Sidebar Right (Settings) -->
-        <aside class="sidebar sidebar-right" id="settings-sidebar" style="display: none;">
-            <div class="settings-header">
-                <h3>Settings</h3>
-            </div>
-            
-            <div class="settings-content">
-                <div id="inputs-frame">
-                    <!-- The inputs exactly as they were, but styled better -->
-                    <!-- Removed resolution inputs to use modal -->
-
-                    <div id="crop-inputs" style="display:none;">
-                        <input type="hidden" name="crop_x" id="crop_x">
-                        <input type="hidden" name="crop_y" id="crop_y">
-                        <input type="hidden" name="crop_w" id="crop_w">
-                        <input type="hidden" name="crop_h" id="crop_h">
-                    </div>
-
-                    <div id="filter-inputs" style="display:none;">
-                        <label class="setting-label">Select Filter</label>
-                        <input type="hidden" name="filter_type" id="filter_type" value="none">
-                        
-                        <div class="filter-thumbnails">
-                            <button type="button" class="filter-thumb active" onclick="selectFilter('none', this)">Normal</button>
-                            <button type="button" class="filter-thumb" onclick="selectFilter('grayscale', this)">B&W</button>
-                            <button type="button" class="filter-thumb" onclick="selectFilter('sepia', this)">Sepia</button>
-                            <button type="button" class="filter-thumb" onclick="selectFilter('blue', this)">Blue</button>
-                            <button type="button" class="filter-thumb" onclick="selectFilter('warm', this)">Warm</button>
-                            <button type="button" class="filter-thumb" onclick="selectFilter('invert', this)">Invert</button>
-                            <button type="button" class="filter-thumb" onclick="selectFilter('posterize', this)">Poster</button>
-                            <button type="button" class="filter-thumb" onclick="selectFilter('high_contrast', this)">Contrast</button>
-                            <button type="button" class="filter-thumb" onclick="selectFilter('vintage', this)">Vintage</button>
-                        </div>
-                    </div>
-
-                    <div id="dither-inputs" style="display:none;">
-                        <label class="setting-label">1-Bit Retro Dithering</label>
-                        <input type="hidden" name="dither_method" id="dither_method" value="none">
-                        
-                        <div class="filter-thumbnails">
-                            <button type="button" class="filter-thumb dither-thumb active" onclick="selectDither('none', this)">None</button>
-                            <button type="button" class="filter-thumb dither-thumb" onclick="selectDither('floyd_steinberg', this)">Floyd</button>
-                            <button type="button" class="filter-thumb dither-thumb" onclick="selectDither('bayer4x4', this)">Bayer</button>
-                            <button type="button" class="filter-thumb dither-thumb" onclick="selectDither('atkinson', this)">Atkinson</button>
-                        </div>
-                    </div>
-
-                    <div id="halftone-inputs" style="display:none;" class="slider-group">
-                        <div class="slider-item">
-                            <div class="slider-header">
-                                <label>Dot Size</label>
-                                <span id="val-ht-size" class="val-badge">10</span>
-                            </div>
-                            <input type="range" name="halftone_size" min="2" max="50" step="1" value="10" oninput="document.getElementById('val-ht-size').innerText=this.value; livePreview()" onchange="app.saveState('Changed Halftone Size')">
-                        </div>
-                        <div class="slider-item">
-                            <div class="slider-header">
-                                <label>Angle</label>
-                                <span id="val-ht-angle" class="val-badge">0&deg;</span>
-                            </div>
-                            <input type="range" name="halftone_angle" min="0" max="90" step="1" value="0" oninput="document.getElementById('val-ht-angle').innerText=this.value+'&deg;'; livePreview()" onchange="app.saveState('Changed Halftone Angle')">
-                        </div>
-                        <div class="slider-item" style="margin-top: 1rem;">
-                            <label class="setting-label">Shape</label>
-                            <input type="hidden" name="halftone_shape" id="halftone_shape" value="none">
-                            <div class="filter-thumbnails">
-                                <button type="button" class="filter-thumb active" onclick="selectHalftoneShape('none', this)">None</button>
-                                <button type="button" class="filter-thumb" onclick="selectHalftoneShape('round', this)">Round</button>
-                                <button type="button" class="filter-thumb" onclick="selectHalftoneShape('square', this)">Square</button>
-                                <button type="button" class="filter-thumb" onclick="selectHalftoneShape('line', this)">Line</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="adjust-inputs" style="display:none;" class="slider-group">
-                        <div class="slider-item">
-                            <div class="slider-header">
-                                <label>Brightness</label>
-                                <span id="val-bright" class="val-badge">1.0</span>
-                            </div>
-                            <input type="range" name="brightness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-bright').innerText=this.value; livePreview()" onchange="app.saveState('Changed Brightness')">
-                        </div>
-                        <div class="slider-item">
-                            <div class="slider-header">
-                                <label>Contrast</label>
-                                <span id="val-cont" class="val-badge">1.0</span>
-                            </div>
-                            <input type="range" name="contrast" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-cont').innerText=this.value; livePreview()" onchange="app.saveState('Changed Contrast')">
-                        </div>
-                        <div class="slider-item">
-                            <div class="slider-header">
-                                <label>Saturation</label>
-                                <span id="val-sat" class="val-badge">1.0</span>
-                            </div>
-                            <input type="range" name="saturation" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sat').innerText=this.value; livePreview()" onchange="app.saveState('Changed Saturation')">
-                        </div>
-                        <div class="slider-item">
-                            <div class="slider-header">
-                                <label>Sharpness</label>
-                                <span id="val-sharp" class="val-badge">1.0</span>
-                            </div>
-                            <input type="range" name="sharpness" min="0.0" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('val-sharp').innerText=this.value; livePreview()" onchange="app.saveState('Changed Sharpness')">
-                        </div>
-                    </div>
-
-                    <div id="watermark-inputs" style="display:none;">
-                        <div class="wm-group">
-                            <label class="setting-label">Text Watermark</label>
-                            <input type="text" name="wm_text" placeholder="Enter text..." oninput="livePreview()" onchange="app.saveState('Changed Watermark Text')">
-                        </div>
-                        <div class="wm-row">
-                            <div class="wm-group">
-                                <label class="setting-label">Color</label>
-                                <div class="color-picker-wrapper">
-                                    <input type="color" name="wm_color" value="#ffffff" class="color-picker" oninput="livePreview()" onchange="app.saveState('Changed Watermark Color')">
-                                </div>
-                            </div>
-                            <div class="wm-group" style="flex:2;">
-                                <div class="slider-header">
-                                    <label>Opacity</label>
-                                    <span id="val-wm-opacity" class="val-badge">128</span>
-                                </div>
-                                <input type="range" name="wm_opacity" min="0" max="255" value="128" oninput="document.getElementById('val-wm-opacity').innerText=this.value; livePreview()" onchange="app.saveState('Changed Watermark Opacity')">
-                            </div>
-                        </div>
-                        <div class="wm-group">
-                            <label class="setting-label">Or Image Logo</label>
-                            <input type="file" name="wm_image" accept="image/*" class="file-input-small" onchange="livePreview(); app.saveState('Changed Watermark Logo')">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="export-section">
-                    <label class="setting-label">Output Format</label>
-                    <select name="save_format" id="save_format">
-                        <option value="AUTO">Auto (Keep original)</option>
-                        <option value="JPEG">JPEG</option>
-                        <option value="PNG">PNG</option>
-                        <option value="WEBP">WEBP</option>
-                        <option value="GIF">GIF</option>
-                    </select>
+        <!-- Right: Control Board (35%) -->
+        <aside class="kiosk-control-board">
+            <div class="board-header">
+                <h2>RETRO PRINT SUITE</h2>
+                <div class="header-actions">
+                    <button class="kiosk-btn icon" id="btn-reset" title="Start Over">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    </button>
                 </div>
             </div>
 
-            <div class="settings-footer">
-                <button type="button" id="download-btn" class="download-btn" style="display: none;" onclick="downloadImage()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Save Image
+            <div class="board-content" id="control-modules" style="opacity: 0.5; pointer-events: none;">
+                
+                <!-- Module 1: The Basics -->
+                <div class="kiosk-module">
+                    <div class="module-title">BASICS</div>
+                    <div class="module-grid">
+                        <button class="kiosk-btn outline" id="btn-tool-crop">
+                            CROP & ROTATE
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Module 2: AI Magic -->
+                <div class="kiosk-module">
+                    <div class="module-title">AI MAGIC</div>
+                    <button class="kiosk-btn outline" id="btn-tool-bg">
+                        REMOVE BACKGROUND
+                    </button>
+                </div>
+
+                <!-- Module 3: Retro Studio -->
+                <div class="kiosk-module">
+                    <div class="module-title">RETRO STUDIO</div>
+                    
+                    <div class="style-toggle">
+                        <label class="toggle-option">
+                            <input type="radio" name="retro_mode" value="none" checked>
+                            <span class="toggle-btn">NONE</span>
+                        </label>
+                        <label class="toggle-option">
+                            <input type="radio" name="retro_mode" value="halftone">
+                            <span class="toggle-btn">HALFTONE</span>
+                        </label>
+                        <label class="toggle-option">
+                            <input type="radio" name="retro_mode" value="dither">
+                            <span class="toggle-btn">DITHER</span>
+                        </label>
+                    </div>
+
+                    <!-- Halftone Controls -->
+                    <div id="halftone-controls" class="sub-controls" style="display: none;">
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <span>DOT SIZE</span>
+                                <span class="val-badge" id="val-ht-size">10</span>
+                            </div>
+                            <input type="range" class="kiosk-fader" id="halftone_size" min="2" max="50" step="1" value="10">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <span>ANGLE</span>
+                                <span class="val-badge" id="val-ht-angle">0&deg;</span>
+                            </div>
+                            <input type="range" class="kiosk-fader" id="halftone_angle" min="0" max="90" step="1" value="0">
+                        </div>
+                        <div class="shape-grid">
+                            <label class="shape-option">
+                                <input type="radio" name="halftone_shape" value="round" checked>
+                                <span class="shape-btn">ROUND</span>
+                            </label>
+                            <label class="shape-option">
+                                <input type="radio" name="halftone_shape" value="square">
+                                <span class="shape-btn">SQUARE</span>
+                            </label>
+                            <label class="shape-option">
+                                <input type="radio" name="halftone_shape" value="line">
+                                <span class="shape-btn">LINE</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Dither Controls -->
+                    <div id="dither-controls" class="sub-controls" style="display: none;">
+                        <div class="shape-grid dither">
+                            <label class="shape-option">
+                                <input type="radio" name="dither_method" value="floyd_steinberg" checked>
+                                <span class="shape-btn">FLOYD</span>
+                            </label>
+                            <label class="shape-option">
+                                <input type="radio" name="dither_method" value="bayer4x4">
+                                <span class="shape-btn">BAYER</span>
+                            </label>
+                            <label class="shape-option">
+                                <input type="radio" name="dither_method" value="atkinson">
+                                <span class="shape-btn">ATKINSON</span>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Export Footer -->
+            <div class="board-footer">
+                <button class="kiosk-btn massive primary" id="btn-download" disabled>
+                    DOWNLOAD HIGH RES
                 </button>
             </div>
         </aside>
-
-        <!-- Resize Modal -->
-        <div id="resize-modal" class="modal-overlay" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Resize</h2>
-                </div>
-                
-                <div class="modal-body">
-                    <div class="resize-type-toggle">
-                        <label class="radio-label">
-                            <input type="radio" name="resize_type" value="pixels" checked onchange="toggleResizeType()">
-                            <span class="radio-custom"></span> Pixels
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="resize_type" value="percentage" onchange="toggleResizeType()">
-                            <span class="radio-custom"></span> Percentage
-                        </label>
-                    </div>
-
-                    <div id="resize-pixels-inputs" class="resize-inputs-grid">
-                        <div class="input-group">
-                            <label>Width (px)</label>
-                            <input type="number" name="width" id="resize_width" oninput="handleResizeInput('width')">
-                        </div>
-                        <div class="aspect-ratio-lock">
-                            <button type="button" id="aspect-lock-btn" class="icon-btn locked" onclick="toggleAspectLock()" title="Lock/Unlock Aspect Ratio">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="lock-icon-svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                            </button>
-                        </div>
-                        <div class="input-group">
-                            <label>Height (px)</label>
-                            <input type="number" name="height" id="resize_height" oninput="handleResizeInput('height')">
-                        </div>
-                    </div>
-
-                    <div id="resize-percentage-inputs" class="resize-inputs-grid" style="display: none;">
-                        <div class="input-group">
-                            <label>Percentage (%)</label>
-                            <input type="number" name="percentage" id="resize_percentage" value="100" min="1" max="1000" oninput="handleResizeInput('percentage')">
-                        </div>
-                    </div>
-
-                    <div class="settings-grid">
-                        <div class="slider-group">
-                            <div class="slider-header">
-                                <label>Quality: <span id="resize-quality-val">100</span>% <span id="resize-quality-lbl">(High)</span></label>
-                            </div>
-                            <input type="range" name="quality" id="resize_quality" min="10" max="100" value="100" oninput="handleQualityInput()" onchange="triggerEstimation()">
-                        </div>
-                        <div class="input-group">
-                            <label>File type</label>
-                            <select name="resize_save_format" id="resize_save_format" onchange="triggerEstimation()">
-                                <option value="AUTO">Auto</option>
-                                <option value="PNG">PNG</option>
-                                <option value="JPEG">JPEG</option>
-                                <option value="WEBP">WEBP</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="resize-info-panel">
-                        <div class="info-row">
-                            <span class="info-label">Current:</span>
-                            <span class="info-value" id="current-info-val">...</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">New:</span>
-                            <span class="info-value" id="new-info-val">...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeResizeModal()">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="downloadFromResize()" title="Apply changes and download">Save</button>
-                </div>
-            </div>
-        </div>
-    </form>
-
-    <!-- History Timeline Drawer -->
-    <div id="history-drawer" class="history-drawer">
-        <div class="drawer-header">
-            <h3>Timeline</h3>
-            <button type="button" class="icon-btn" onclick="toggleHistoryDrawer()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-        <div class="drawer-body">
-            <ul id="history-drawer-list" class="history-timeline">
-                <!-- Populated by JS -->
-            </ul>
-        </div>
     </div>
 
-    <!-- Toast Notifications Container -->
-    <div id="toast-container" class="toast-top-right"></div>
+    <!-- Hidden form for backend submission -->
+    <form id="download-form" action="{{ url_for('main.download_image') }}" method="POST" enctype="multipart/form-data" style="display: none;">
+        <input type="file" name="image" id="hidden-image-input">
+        <input type="hidden" name="crop_x" id="hidden-crop-x">
+        <input type="hidden" name="crop_y" id="hidden-crop-y">
+        <input type="hidden" name="crop_w" id="hidden-crop-w">
+        <input type="hidden" name="crop_h" id="hidden-crop-h">
+        <input type="hidden" name="crop_rotate" id="hidden-crop-rotate">
+        <input type="hidden" name="remove_bg" id="hidden-remove-bg">
+        <input type="hidden" name="dither_method" id="hidden-dither-method">
+        <input type="hidden" name="halftone_shape" id="hidden-halftone-shape">
+        <input type="hidden" name="halftone_size" id="hidden-halftone-size">
+        <input type="hidden" name="halftone_angle" id="hidden-halftone-angle">
+        <input type="hidden" name="save_format" value="PNG">
+    </form>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

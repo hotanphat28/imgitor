@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-08-26
+### Changed
+- **Massive Pivot to Retro Print Suite**: Re-imagined Imgitor from a generic editor to a focused, single-purpose retro kiosk.
+- **Frontend Architecture**: Shifted live previews from server-side rendering to client-side HTML5 Canvas.
+- **UI Layout**: Transitioned to a Split-Screen Tactile Kiosk interface.
+- **Stateless Backend**: Removed all session management and disk IO from the backend. `/download` and `/api/v1/process` now handle purely stateless one-shot rendering.
+- **License**: Changed license from AGPL-3.0 to MIT to allow for massive scale.
+
+### Removed
+- **Features Stripped**: Removed generic color filters, brightness/contrast adjustments, watermarks, resizing modals, and batch processing to align with the brutalist single-feature vision.
+
+## [2.3.0] - Unreleased
 ### Added
 - **Halftone Tool**: Elevated the Halftone effect from a filter into a dedicated tool with advanced controls for dot size, angle, and shape (Round, Square, Line).
 - **API Documentation**: Added comprehensive `API.md` to document the `/api/v1/process` RESTful endpoint, and linked it in the README.

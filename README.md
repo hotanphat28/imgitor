@@ -1,44 +1,24 @@
-# Image Processing Web Tool (Imgitor)
+# Retro Print Suite (Imgitor)
 
-A browser-based image processing tool created with Flask. It allows you to:
-- Resize, crop, and rotate images.
-- Convert images to different formats (JPEG, PNG, WEBP, GIF).
-- Apply color filters (Grayscale, Sepia, etc.).
-- Remove backgrounds from images using AI.
+A focused, browser-based image processing tool designed to turn your modern images into beautiful, tactile retro prints. Built with a raw Brutalist UI, HTML5 Canvas, and Flask.
 
 ## 🌟 Features
 
-- **Refined Neubrutalist Interface**: A bold, high-contrast UI featuring hard drop shadows and satisfying physical button press states, complete with a Dark/Light Mode toggle and mobile-optimized bottom sheet controls.
-- **Seamless Auto-Commit Workflow**: Edit properties without ever hitting 'Apply'. The system intelligently commits your changes to an undo stack as you work, providing instant visual feedback via sliding Toast notifications.
-- **Non-Destructive Pipeline**: The backend dynamically processes an edit stack in memory, preventing compounding artifacts and allowing you to adjust sliders infinitely without degrading the original image quality.
-- **Visual Undo/Redo Timeline**: A sleek, slide-out side drawer tracks every UI interaction in a connected vertical timeline. Simply click any state to instantly jump back in time, with zero-latency live preview rollbacks.
-- **Blazing-Fast Live Preview**: See a live preview of your edits instantly on the canvas. The engine dynamically downscales images during slider adjustments for native, sub-50ms desktop-like performance.
-- **Batch Processing**: Upload multiple images, configure a bulk edit (e.g., watermark all images), and download them as a ZIP archive.
+- **Tactile Kiosk Interface**: A bold, high-contrast Split-Screen UI featuring hard drop shadows and satisfying physical button press states.
+- **Client-Side Live Preview**: See a live preview of your retro edits instantly. The rendering engine computes Halftone and Dithering effects directly on your browser's HTML5 Canvas, offering zero-latency adjustments.
+- **Retro Effects Engine**:
+    1. **Dithering**: Apply classic 1-bit dithering algorithms (Floyd-Steinberg, Bayer, Atkinson).
+    2. **Halftone**: Generate customizable halftone dot patterns with dedicated controls for dot size, angle, and shape (Round, Square, Line).
+- **Essential Tools**: Includes a visual Cropper and AI-powered Background Removal to prep your subjects before applying retro effects.
+- **Stateless Backend**: The server is completely stateless. It acts only as a high-performance rendering API for your final "Download High Res" export.
 - **RESTful API**: Exposes a `/api/v1/process` endpoint for developers to process images programmatically. (See [API Documentation](API.md)).
-- **Processing Modes**:
-    1. **Resize**: Interactive modal with pixel or percentage scaling, aspect ratio locking, and live file-size estimation before downloading.
-    2. **Crop & Rotate**: Unified interactive visual tool with preset aspect ratios, custom angle slider, and flip controls.
-    3. **Filters**: Apply Grayscale, Sepia, Blue Tone, Warm Tone, Invert, Posterize, High Contrast, or Vintage using an interactive visual thumbnail grid.
-       
-       [🎥 Watch Feature Showcase: Filters](features-videos/feature-filters.mp4)
-    4. **Adjustments**: Fine-tune Brightness, Contrast, Saturation, and Sharpness.
-    5. **Watermark**: Protect images with text (opacity/color) or image logos.
-    6. **Dithering**: Apply retro 1-bit dithering effects (Floyd-Steinberg, Bayer, Atkinson).
-       
-       [🎥 Watch Feature Showcase: Dithering](features-videos/feature-dithering-effects.mp4)
-    7. **Remove Background**: AI-powered background removal.
-    8. **Halftone**: Apply customizable halftone effects with dedicated controls for dot size, angle, and shape.
-- **Format Conversion**: Choose output format or let the app automatically decide to preserve transparency.
-- **Security & Performance**: Rate limiting prevents abuse, while local caching ensures lightning-fast undo/redo.
-- **Modular Design**: Scalable Flask application structure using blueprints and background threads.
 
 ## 🛠️ Prerequisites
 
-- **Python 3.12+** (Recommended due to dependency compatibility)
+- **Python 3.12+**
 - **Flask**
 - **Pillow** (PIL Fork)
-- **rembg**
-- **onnxruntime**
+- **rembg** (Background Removal)
 
 ## 🚀 Installation
 
@@ -48,7 +28,7 @@ A browser-based image processing tool created with Flask. It allows you to:
    cd imgitor
    ```
 
-2. Create and activate a virtual environment (optional but recommended):
+2. Create and activate a virtual environment:
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -61,15 +41,6 @@ A browser-based image processing tool created with Flask. It allows you to:
 
 4. Set up environment variables:
    Copy `.env.example` to `.env` and configure your settings.
-   
-   **On Linux/macOS:**
-   ```bash
-   cp .env.example .env
-   ```
-   **On Windows (Command Prompt):**
-   ```cmd
-   copy .env.example .env
-   ```
 
 ## ▶️ Usage (Development)
 
@@ -96,28 +67,12 @@ docker run -p 5000:5000 imgitor
 
 ## 🧪 Testing
 
-To run the automated test suite, which includes both pure Python unit tests and Playwright End-to-End (E2E) browser tests, use `uv`:
+To run the automated test suite, which includes both Python unit tests and Playwright End-to-End (E2E) browser tests, use `uv`:
 ```bash
-uv run pytest --cov=app
+uv run pytest
 ```
 *(Note: To run the E2E UI tests, you must run `uv run playwright install --with-deps chromium` to fetch browser binaries.)*
 
-## 📂 Project Structure
+## 📝 License
 
-```
-imgitor/
-├── run.py                 # Entry point
-├── app/
-│   ├── __init__.py        # App initialization
-│   ├── routes.py          # Route definitions
-│   ├── utils.py           # Image processing logic
-│   ├── templates/         # HTML templates
-│   │   └── index.html
-│   └── static/            # Static assets
-│       ├── css/
-│       │   └── style.css
-│       └── js/
-│           └── main.js
-├── CONTEXT.md           # Project context and architecture details
-└── README.md
-```
+This project is licensed under the [MIT License](LICENSE).
