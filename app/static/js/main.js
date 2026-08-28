@@ -247,7 +247,14 @@ function renderCanvas() {
         const size = parseInt(htSize.value);
         const angle = parseInt(htAngle.value);
         const shape = document.querySelector('input[name="halftone_shape"]:checked').value;
-        updateHiddenForm('halftone', { size, angle, shape });
+        
+        let ratio = 1;
+        if (currentImage.width > MAX_DIM || currentImage.height > MAX_DIM) {
+            ratio = Math.min(MAX_DIM / currentImage.width, MAX_DIM / currentImage.height);
+        }
+        const scaledSize = Math.max(1, Math.round(size / ratio));
+        
+        updateHiddenForm('halftone', { size: scaledSize, angle, shape });
         
         ctx.putImageData(imgData, 0, 0); // Put grayscale back
         applyHalftoneCanvas(w, h, size, shape);
