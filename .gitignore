@@ -138,7 +138,7 @@ cython_debug/
 .vscode/
 .idea/
 
-# Imgitor specific
+# imgdithr specific
 temp_sessions/
 flask_cache/
 flask_session/

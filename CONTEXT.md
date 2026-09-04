@@ -1,6 +1,6 @@
 # Retro Print Suite Context
 
-Imgitor has pivoted into a browser-based **Retro Print Suite** focused on single-feature simplicity: applying high-quality halftone and dithering effects with a tactile, brutalist UI.
+imgdithr has pivoted into a browser-based **Retro Print Suite** focused on single-feature simplicity: applying high-quality halftone and dithering effects with a tactile, brutalist UI.
 
 ## Tech Stack
 - **Backend:** Python 3.12+, Flask.

@@ -1,4 +1,4 @@
-# Retro Print Suite (Imgitor)
+# Retro Print Suite (imgdithr)
 
 A focused, browser-based image processing tool designed to turn your modern images into beautiful, tactile retro prints. Built with a raw Brutalist UI, HTML5 Canvas, and Flask.
 
@@ -24,8 +24,8 @@ A focused, browser-based image processing tool designed to turn your modern imag
 
 1. Clone the repository and navigate to the project directory:
    ```bash
-   git clone https://github.com/hotanphat28/imgitor.git
-   cd imgitor
+   git clone https://github.com/hotanphat28/imgdithr.git
+   cd imgdithr
    ```
 
 2. Create and activate a virtual environment:
@@ -61,8 +61,8 @@ python wsgi.py
 
 You can also run the application using Docker:
 ```bash
-docker build -t imgitor .
-docker run -p 5000:5000 imgitor
+docker build -t imgdithr .
+docker run -p 5000:5000 imgdithr
 ```
 
 ## 🧪 Testing

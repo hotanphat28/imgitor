@@ -53,7 +53,7 @@ def create_app(config_name="default"):
         stream_handler.setLevel(logging.INFO)
         app.logger.addHandler(stream_handler)
     app.logger.setLevel(logging.INFO)
-    app.logger.info("Imgitor startup")
+    app.logger.info("imgdithr startup")
 
     cleanup_thread = threading.Thread(target=cleanup_sessions, args=(app,), daemon=True)
     cleanup_thread.start()

@@ -1,6 +1,6 @@
-# Imgitor REST API Documentation
+# imgdithr REST API Documentation
 
-Imgitor provides a RESTful API for developers to process images programmatically. The API allows you to apply all of Imgitor's non-destructive image processing modes in a stateless, single-pass request.
+imgdithr provides a RESTful API for developers to process images programmatically. The API allows you to apply all of imgdithr's non-destructive image processing modes in a stateless, single-pass request.
 
 ## Authentication
 
