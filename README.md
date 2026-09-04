@@ -1,4 +1,4 @@
-# Retro Print Suite (imgdithr)
+# imgdithr
 
 A focused, browser-based image processing tool designed to turn your modern images into beautiful, tactile retro prints. Built with a raw Brutalist UI, HTML5 Canvas, and Flask.
 
